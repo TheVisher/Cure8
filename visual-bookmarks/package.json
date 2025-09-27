@@ -1,0 +1,17 @@
+{
+  "name": "cure8",
+  "version": "1.0.0",
+  "description": "Cure8 - Content curation platform for organizing and managing bookmarks, media, and digital resources",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "python3 -m http.server 8000"
+  },
+  "keywords": ["cure8", "curation", "bookmarks", "media", "content", "platform"],
+  "author": "Cure8 Team",
+  "license": "ISC",
+  "homepage": "https://cure8s.com",
+  "dependencies": {
+    "isotope-layout": "^3.0.6"
+  }
+}

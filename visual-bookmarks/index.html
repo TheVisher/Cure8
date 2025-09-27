@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cure8 - Content Curation Platform</title>
+  <meta name="description" content="Cure8 - Your smart content curation platform. Organize, track, and access your bookmarks, media, and digital resources efficiently.">
+  <meta name="keywords" content="Cure8, curation, bookmarks, media, content, platform, organize">
+  <meta name="author" content="Cure8">
+  <meta property="og:title" content="Cure8 - Content Curation Platform">
+  <meta property="og:description" content="Organize and access your curated content with Cure8">
+  <meta property="og:url" content="https://cure8s.com">
+  <meta property="og:type" content="website">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="blob blob1"></div>
+  <div class="blob blob2"></div>
+  <div id="app">
+    <aside class="sidebar glass">
+      <div class="logo-container">
+        <svg class="infinity-symbol" width="24" height="24" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M25,50a25,25 0 1,1 50,0a25,25 0 1,1 -50,0" 
+                stroke="url(#grad1)" stroke-width="12" fill="none"/>
+          <defs>
+            <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#6A5ACD"/>
+              <stop offset="50%" stop-color="#4A90E2"/>
+              <stop offset="100%" stop-color="#FF69B4"/>
+            </linearGradient>
+          </defs>
+        </svg>
+        <h1 class="cure8-text">Cure8</h1>
+      </div>
+      <nav>
+        <ul>
+          <li><button>All</button></li>
+          <li><button>Work</button></li>
+          <li><button>Personal</button></li>
+        </ul>
+        <button class="add-folder-btn">+ Add Category</button>
+      </nav>
+    </aside>
+    <header class="topbar">
+        <input class="search" placeholder="Search your curated content..."/>
+    </header>
+    <main class="main">
+      <section class="bookmarks-grid">
+        <!-- Cards will be dynamically added here -->
+      </section>
+      <button class="add-bookmark-btn">+</button>
+    </main>
+  </div>
+  <div class="modal-overlay"></div>
+  <!-- Card details modal -->
+  <div class="modal" id="details-modal">
+    <button class="modal-close">&times;</button>
+    <strong class="details-modal-title"></strong>
+    <p class="details-modal-url"></p>
+    <div class="details-modal-notes"></div>
+    <div class="details-modal-tags"></div>
+  </div>
+  <!-- Add new bookmark modal -->
+  <div class="modal" id="add-modal">
+    <button class="modal-close">&times;</button>
+    <h2>Add Content</h2>
+    <form id="add-bookmark-form">
+      <input type="text" placeholder="Title" name="title" autocomplete="off"/>
+      <input type="url" placeholder="URL" name="url" required autocomplete="off"/>
+      <input type="text" placeholder="Tags (comma separated)" name="tags"/>
+      <textarea placeholder="Notes" name="notes"></textarea>
+      <button type="submit">Save</button>
+    </form>
+  </div>
+  <script src="node_modules/isotope-layout/dist/isotope.pkgd.min.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
