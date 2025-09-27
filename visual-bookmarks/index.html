@@ -19,8 +19,8 @@
 <body>
   <div class="blob blob1"></div>
   <div class="blob blob2"></div>
-  <div id="app">
-    <aside class="sidebar glass">
+  <div class="main-layout">
+    <aside class="sidebar">
       <div class="logo-container">
         <svg class="infinity-symbol" width="24" height="24" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
           <path d="M25,50a25,25 0 1,1 50,0a25,25 0 1,1 -50,0" 
@@ -44,15 +44,17 @@
         <button class="add-folder-btn">+ Add Category</button>
       </nav>
     </aside>
-    <header class="topbar">
+    <section class="content-area">
+      <header class="topbar">
         <input class="search" placeholder="Search your curated content..."/>
-    </header>
-    <main class="main">
-      <section class="bookmarks-grid" id="muuri-grid">
-        <!-- Cards will be dynamically added here -->
-      </section>
-      <button class="add-bookmark-btn">+</button>
-    </main>
+      </header>
+      <main class="main-content">
+        <section class="bookmarks-grid" id="muuri-grid">
+          <!-- Cards will be dynamically added here -->
+        </section>
+        <button class="add-bookmark-btn">+</button>
+      </main>
+    </section>
   </div>
   <div class="modal-overlay"></div>
   <!-- Card details modal -->
