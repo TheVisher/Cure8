@@ -114,6 +114,74 @@ body {
     inset 0 1px 0 rgba(255, 255, 255, 0.15);
 }
 
+/* CURE8 USER PROFILE - Top Bar Version */
+.user-profile {
+  padding: 12px 16px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  box-shadow: 
+    0 4px 12px 0 rgba(0,0,0,0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.user-profile:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.1);
+  box-shadow: 
+    0 6px 16px 0 rgba(0,0,0,0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15);
+}
+
+.user-avatar {
+  flex-shrink: 0;
+}
+
+.avatar-placeholder {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #6A5ACD, #4A90E2, #FF69B4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: 700;
+  font-size: 14px;
+  box-shadow: 0 2px 8px rgba(106, 90, 205, 0.3);
+}
+
+.user-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.username {
+  color: #fafafd;
+  font-weight: 600;
+  font-size: 13px;
+  margin-bottom: 1px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.user-status {
+  color: #c7cbef;
+  font-size: 11px;
+  opacity: 0.8;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .infinity-symbol {
   flex-shrink: 0;
 }
@@ -207,6 +275,110 @@ input.search:focus {
   border: 1.2px solid #7F6AED;
 }
 
+/* CURE8 SIDEBAR NAVIGATION - Arc Card Style */
+nav {
+  margin: 24px 0;
+}
+
+.sidebar-button {
+  background: rgba(60, 38, 124, 0.52);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-radius: 16px;
+  border: 1.5px solid rgba(180, 150, 255, 0.09);
+  box-shadow: 
+    0 2px 12px 0 rgba(30, 11, 50, 0.17),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  color: #f8f8ff;
+  font-weight: 500;
+  font-size: 1.09rem;
+  letter-spacing: 0.02em;
+  padding: 12px 18px;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  transition: 
+    box-shadow 0.4s cubic-bezier(.4,2,.6,1), 
+    background 0.4s, 
+    border-color 0.3s, 
+    color 0.3s,
+    transform 0.3s;
+  position: relative;
+  overflow: hidden;
+}
+
+.sidebar-button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+  transition: left 0.6s ease;
+}
+
+.sidebar-button:hover::before {
+  left: 100%;
+}
+
+.sidebar-button:hover,
+.sidebar-button.active {
+  background: linear-gradient(135deg, rgba(78, 32, 124, 0.63) 10%, rgba(34, 54, 198, 0.60) 90%);
+  border-color: rgba(255, 31, 161, 0.4);
+  box-shadow: 
+    0 0 36px 8px rgba(255, 31, 161, 0.2), 
+    0 2px 16px 0 rgba(30, 11, 50, 0.67),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  color: #ff1fa1;
+  transform: translateY(-1px);
+}
+
+.sidebar-button.active {
+  background: linear-gradient(135deg, rgba(106, 90, 205, 0.7) 0%, rgba(74, 144, 226, 0.65) 100%);
+  border-color: #ff1fa1;
+  box-shadow: 
+    0 0 32px 6px rgba(255, 31, 161, 0.25), 
+    0 4px 20px 0 rgba(30, 11, 50, 0.7),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  color: #ffffff;
+  font-weight: 600;
+}
+
+.sidebar-button.add-category {
+  background: rgba(255, 31, 161, 0.15);
+  border-color: rgba(255, 31, 161, 0.25);
+  color: #ff1fa1;
+  font-weight: 500;
+  margin-top: 8px;
+}
+
+.sidebar-button.add-category:hover {
+  background: linear-gradient(135deg, rgba(255, 31, 161, 0.25) 0%, rgba(255, 105, 180, 0.2) 100%);
+  border-color: rgba(255, 31, 161, 0.5);
+  box-shadow: 
+    0 0 40px 10px rgba(255, 31, 161, 0.3), 
+    0 2px 16px 0 rgba(30, 11, 50, 0.67);
+  color: #ffffff;
+}
+
+.button-text {
+  position: relative;
+  z-index: 1;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+/* Focus states for accessibility */
+.sidebar-button:focus {
+  outline: none;
+  border-color: rgba(255, 31, 161, 0.6);
+  box-shadow: 
+    0 0 0 3px rgba(255, 31, 161, 0.2),
+    0 2px 12px 0 rgba(30, 11, 50, 0.17);
+}
+
 /* CURE8 TOPBAR - Seamlessly Connected to Sidebar */
 .topbar {
   height: 80px;
@@ -224,6 +396,7 @@ input.search:focus {
   padding: 20px 48px;
   display: flex;
   align-items: center;
+  justify-content: space-between;
   z-index: 2;
   box-sizing: border-box;
 }
