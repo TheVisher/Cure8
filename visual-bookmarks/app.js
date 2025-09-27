@@ -66,8 +66,9 @@ function createCardElement(data, index) {
     <div class="card-content">
       <button class="delete-btn" title="Delete content">&times;</button>
       <img class="card-thumbnail" src="${thumbnailUrl}" alt="${data.title}" loading="lazy">
-      <div class="card-info">
-        <h3 class="card-title">${data.title}</h3>
+      <hr class="card-divider">
+      <div class="card-footer">
+        <strong class="card-title">${data.title}</strong>
         <p class="card-url">${data.url.replace(/^https?:\/\/(www\.)?/,'').split('/')[0]}</p>
         ${data.notes ? `<div class="card-notes">${data.notes}</div>` : ''}
         ${data.tags ? `<div class="card-tags">${data.tags.split(',').map(t => `<span>${t.trim()}</span>`).join(' ')}</div>` : ''}
@@ -95,13 +96,10 @@ function createCardElement(data, index) {
     document.getElementById('details-modal').classList.add('active');
   });
   
-  // Add image load handler to refresh layout when image loads
+  // Image loaded - no special handling needed for CSS columns
   const img = item.querySelector('.card-thumbnail');
   img.addEventListener('load', function() {
-    if (muuriGrid) {
-      muuriGrid.refreshItems();
-      muuriGrid.layout();
-    }
+    // CSS columns handle layout automatically
   });
   
   return item;
@@ -129,17 +127,7 @@ function renderAllCards() {
     gridElement.appendChild(item);
   }
   
-  // Initialize or refresh Muuri grid
-  if (muuriGrid) {
-    // Wait for images to load before layout
-    setTimeout(() => {
-      muuriGrid.refreshItems();
-      muuriGrid.layout();
-    }, 200);
-  } else {
-    initMuuriGrid();
-  }
-  
+  // CSS columns handle layout automatically - no Muuri needed
   isRendering = false;
   console.log('Render complete');
 }
@@ -157,33 +145,8 @@ function addCard({ title, url, notes, tags }) {
   console.log('Added new bookmark:', newBookmark);
   console.log('Total bookmarks:', bookmarks.length);
   
-  // Create the new card element
-  const newItem = createCardElement(newBookmark, 0);
-  
-  // Add to grid at the beginning (top-left position)
-  if (muuriGrid) {
-    muuriGrid.add(newItem, { index: 0 });
-    
-    // Wait for the item to be fully rendered before layout
-    setTimeout(() => {
-      muuriGrid.refreshItems();
-      muuriGrid.layout();
-    }, 100);
-  } else {
-    // If grid not initialized, add to DOM and initialize
-    const gridElement = document.querySelector('#muuri-grid');
-    gridElement.insertBefore(newItem, gridElement.firstChild);
-    
-    // Initialize grid if not already done
-    setTimeout(() => {
-      if (!muuriGrid) {
-        initMuuriGrid();
-      }
-    }, 50);
-  }
-  
-  // Update all indices
-  updateBookmarkIndices();
+  // Re-render all cards to maintain proper order with CSS columns
+  renderAllCards();
   
   // Fetch thumbnail in background
   setTimeout(() => {
@@ -433,21 +396,7 @@ document.addEventListener('DOMContentLoaded', function() {
   window.addEventListener('resize', function() {
     clearTimeout(resizeTimeout);
     resizeTimeout = setTimeout(() => {
-      if (muuriGrid) {
-        // Update item dimensions based on new container size
-        const gridElement = document.querySelector('#muuri-grid');
-        const containerWidth = gridElement.offsetWidth;
-        
-        // Update CSS custom property for responsive width
-        const columns = Math.floor(containerWidth / 300);
-        const itemWidth = Math.min(280, Math.floor((containerWidth - 60) / columns));
-        
-        document.documentElement.style.setProperty('--item-width', `${itemWidth}px`);
-        
-        // Refresh and layout the grid
-        muuriGrid.refreshItems();
-        muuriGrid.layout();
-      }
+      // CSS columns handle responsive layout automatically
     }, 150);
   });
 });
