@@ -1,4 +1,4 @@
-# Cure8 - Smart Health Platform
+# Cure8 - Media Curation tool
 
 Cure8 is a modern web application for organizing and managing health resources efficiently. Built with a beautiful glassmorphism design and responsive CSS Grid layout.
 
