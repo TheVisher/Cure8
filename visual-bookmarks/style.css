@@ -89,6 +89,18 @@ body {
   display: flex;
   align-items: center;
   gap: 12px;
+<<<<<<< HEAD
+=======
+  transition: all 0.3s ease;
+}
+
+.logo-container:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.1);
+  box-shadow: 
+    0 6px 16px 0 rgba(0,0,0,0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15);
+>>>>>>> parent of ac6d9c2 (nice side bar buttons)
 }
 
 .infinity-symbol {
@@ -184,7 +196,11 @@ input.search:focus {
   border: 1.2px solid #7F6AED;
 }
 
+<<<<<<< HEAD
 /* CURE8 TOPBAR - Fixed */
+=======
+/* CURE8 TOPBAR - Seamlessly Connected to Sidebar */
+>>>>>>> parent of ac6d9c2 (nice side bar buttons)
 .topbar {
   grid-area: topbar;
   background: rgba(34, 34, 58, 0.34);
@@ -192,12 +208,18 @@ input.search:focus {
   backdrop-filter: blur(16px) saturate(135%);
   -webkit-backdrop-filter: blur(16px) saturate(135%);
   padding: 20px 48px;
+<<<<<<< HEAD
   position: fixed;
   top: 0;
   left: 260px;
   right: 0;
   z-index: 99;
   height: 80px;
+=======
+  display: flex;
+  align-items: center;
+  z-index: 2;
+>>>>>>> parent of ac6d9c2 (nice side bar buttons)
   box-sizing: border-box;
 }
 
