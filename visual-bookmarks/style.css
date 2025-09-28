@@ -723,11 +723,12 @@ nav {
   box-shadow: 0 18px 44px 0 #7B7FDE88, 0 0 24px 5px #F3047E33;
   color: #fff;
   position: fixed;
-  top: 50%;
-  left: 50%;
-  width: 420px;
-  min-height: 260px;
+  top: 50vh;
+  left: 50vw;
+  width: 500px;
+  min-height: 400px;
   max-width: 90vw;
+  max-height: 90vh;
   z-index: 9999;
   padding: 0;
   opacity: 0;
@@ -735,6 +736,9 @@ nav {
   transition: opacity .28s cubic-bezier(.4,.29,.29,.97),
               transform .28s cubic-bezier(.48,.56,.36,1.42);
   pointer-events: none;
+  overflow: hidden;
+  margin: 0;
+  box-sizing: border-box;
 }
 .modal.active {
   opacity: 1;
