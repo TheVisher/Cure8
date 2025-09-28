@@ -1,117 +1,68 @@
-# Cure8 - Smart Health Platform
+# Cure8 – Cosmic Bookmark Canvas
 
-Cure8 is a modern web application for organizing and managing health resources efficiently. Built with a beautiful glassmorphism design and responsive CSS Grid layout.
+Cure8 is a local-first bookmarking studio for catching links on the fly, auto-enriching them with previews, and browsing everything inside a cinematic, neon interface. Paste a URL, type to search, drag in exports—your library always stays on your machine, ready when inspiration strikes.
 
-## Features
+## Core Features
 
-- **Smart Health Resource Management**: Organize your medical resources, articles, and health-related content
-- **Beautiful Glassmorphism UI**: Modern design with glass-like effects and smooth animations
-- **Responsive Grid Layout**: CSS Grid-based layout that adapts to any screen size
-- **Search Functionality**: Quickly find your health resources
-- **Category Organization**: Organize resources into custom categories
-- **Local Storage**: All data is stored locally in your browser
-- **Thumbnail Generation**: Automatic thumbnail generation for health resources
+- **Quick Capture Omnibox** – Paste or type from anywhere; Cure8 stores the link instantly and fetches metadata in the background.
+- **Auto Preview Service** – A bundled preview microservice (Node + Puppeteer) resolves titles, favicons, poster images, and descriptions for richer cards.
+- **Adaptive Boards** – Responsive grid with intelligent card sizing and animated hover glows that scale from phone to ultra-wide monitors.
+- **Powerful Search** – Debounced global search across titles and domains with instant feedback as you type.
+- **Import & Export** – JSON import/export keeps your collection portable and easy to back up or share.
+- **Local Persistence** – Everything lives in `localStorage`; no accounts, no cloud, just your data.
 
 ## Getting Started
 
-### Prerequisites
-
-- A modern web browser
-- Python 3 (for local development server)
-
-### Installation
-
-1. Clone the repository:
 ```bash
 git clone https://github.com/yourusername/cure8.git
 cd cure8
-```
-
-2. Start the local development server:
-```bash
-cd visual-bookmarks
-python3 -m http.server 8000
-```
-
-3. Open your browser and navigate to `http://localhost:8000`
-
-### Using npm (Alternative)
-
-You can also use npm to start the development server:
-
-```bash
+npm install
 npm start
 ```
 
-## Usage
+The app boots on `http://localhost:3000`. The link preview service defaults to `http://localhost:8787`. Adjust the endpoint inside **Settings → Link Preview Service** if you host it elsewhere.
 
-1. **Adding Health Resources**: Click the "+" button to add new health resources
-2. **Organizing**: Use categories to organize your resources
-3. **Searching**: Use the search bar to quickly find specific resources
-4. **Managing**: Delete resources with the delete button (with undo functionality)
+### Preview Service
 
-## Technology Stack
+```bash
+cd services/link-preview
+npm install
+npm run dev
+```
 
-- **Frontend**: HTML5, CSS3, JavaScript (ES6+)
-- **Layout**: CSS Grid
-- **Styling**: Custom CSS with glassmorphism effects
-- **Storage**: Local Storage API
-- **Icons**: Favicon integration with Google's favicon service
+This Express service exposes `/preview?url=...` and returns metadata consumed by the React app. A `/health` route is included for uptime checks.
 
 ## Project Structure
 
 ```
 cure8/
-├── visual-bookmarks/
-│   ├── index.html          # Main HTML file
-│   ├── style.css           # All styles and glassmorphism effects
-│   ├── app.js              # Main application logic
-│   ├── package.json        # Project dependencies
-│   └── node_modules/       # Dependencies
-├── public/                 # React app public files
-├── src/                    # React app source files
-├── package.json            # Root package.json
-└── README.md               # This file
+├── public/                  # CRA public assets
+├── src/                     # React UI
+│   ├── components/          # App shell, cards, sidebar
+│   └── screens/             # Grid + Home views
+├── services/link-preview/   # Metadata service
+└── README.md
 ```
 
-## Customization
+## Scripts
 
-### Adding New Categories
-
-Categories can be added through the sidebar interface. The system supports unlimited categories.
-
-### Styling
-
-The application uses a modular CSS approach with glassmorphism effects. Key styling files:
-- `style.css`: Main stylesheet with glassmorphism effects
-- CSS Grid layout for responsive design
-- Custom animations and transitions
+| Command | Description |
+|---------|-------------|
+| `npm start` | Launch the React dev server |
+| `npm test` | Run the Jest + Testing Library suite |
+| `npm run build` | Production bundle |
+| `npm run dev` (inside `services/link-preview`) | Start preview API |
 
 ## Contributing
 
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add some amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
-
-## License
-
-This project is licensed under the ISC License - see the LICENSE file for details.
+1. Fork and branch (`git checkout -b feature/idea`).
+2. Make your change with tests or notes.
+3. Submit a PR describing the improvement.
 
 ## Support
 
-For support, email support@cure8s.com or visit our website at [https://cure8s.com](https://cure8s.com).
-
-## Roadmap
-
-- [ ] User authentication
-- [ ] Cloud synchronization
-- [ ] Mobile app
-- [ ] Advanced search filters
-- [ ] Resource sharing
-- [ ] API integration with health services
+Questions, ideas, or bugs? Drop a line at **support@cure8s.com**.
 
 ---
 
-**Cure8** - Organizing health resources for a better tomorrow.
+**Cure8** – Capture links, curate vibes.

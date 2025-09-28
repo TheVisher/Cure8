@@ -1,22 +1,38 @@
 import React from "react";
 
-export function Card({ title, domain, image, state="ok", onClick }) {
+export function Card({ title, domain, image, state="ok", onClick, layout="grid" }) {
   const showSkeleton = state === "pending";
   const showBrand = !image && state !== "pending";
+  const isMasonry = layout === "masonry";
+
+  const cardClasses = ["bookmark-card", "group"];
+  if (isMasonry) cardClasses.push("bookmark-card--masonry");
+
+  const mediaWrapperClasses = ["relative", "overflow-hidden"];
+  if (!isMasonry) mediaWrapperClasses.push("aspect-[4/5]");
 
   return (
-    <div onClick={onClick} className="bookmark-card group">
-      <div className="bookmark-card-content">
+    <div onClick={onClick} className={cardClasses.join(" ")}>
+      <div className={isMasonry ? "bookmark-card-content bookmark-card-content--masonry" : "bookmark-card-content"}>
         {/* Image / skeleton / brand fallback */}
-        <div className="relative aspect-[4/5]">
+        <div className={mediaWrapperClasses.join(" ")}>
           {showSkeleton && (
-            <div className="h-full w-full animate-pulse bg-white/5" />
+            <div className={["w-full", isMasonry ? "min-h-[160px]" : "h-full", "animate-pulse", "bg-white/5"].join(" ")} />
           )}
           {!showSkeleton && image && (
-            <img src={image} alt="" className="h-full w-full object-cover" />
+            <img
+              src={image}
+              alt=""
+              className={isMasonry ? "w-full h-auto" : "h-full w-full object-cover"}
+            />
           )}
           {!showSkeleton && showBrand && (
-            <div className="h-full w-full flex items-center justify-center bg-white/5 text-text-secondary">
+            <div
+              className={[
+                "w-full flex items-center justify-center bg-white/5 text-text-secondary",
+                isMasonry ? "bookmark-card-placeholder" : "h-full"
+              ].join(" ")}
+            >
               {domain}
             </div>
           )}

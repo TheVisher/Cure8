@@ -15,6 +15,7 @@ const defaultSettings = {
 };
 
 const CATEGORY_IDS = new Set(["Home", "All", "Work", "Personal", "Favorites", "Recent"]);
+const LAYOUT_KEY = "cure8.layout";
 
 const randomId = () => {
   try {
@@ -72,6 +73,11 @@ export default function GridScreen() {
   const [showDetailsModal, setShowDetailsModal] = React.useState(false);
   const [selectedItem, setSelectedItem] = React.useState(null);
   const [settings, setSettings] = React.useState(readSettingsFromStorage);
+  const [layoutMode, setLayoutMode] = React.useState(() => {
+    if (typeof window === "undefined") return "grid";
+    const stored = window.localStorage.getItem(LAYOUT_KEY);
+    return stored === "masonry" ? "masonry" : "grid";
+  });
 
   const persistItems = React.useCallback((updater) => {
     setItems(prev => {
@@ -112,6 +118,15 @@ export default function GridScreen() {
       console.error("Failed to persist bookmarks", err);
     }
   }, [items]);
+
+  React.useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      window.localStorage.setItem(LAYOUT_KEY, layoutMode);
+    } catch (err) {
+      console.error("Failed to persist layout mode", err);
+    }
+  }, [layoutMode]);
 
   // Listen to omnibox events
   React.useEffect(() => {
@@ -315,7 +330,29 @@ export default function GridScreen() {
   } else {
     content = (
       <>
-        <div className="bookmark-grid">
+        <div className="layout-toolbar">
+          <span className="layout-label">Layout</span>
+          <div className="layout-toggle">
+            {[
+              { id: "grid", label: "Grid" },
+              { id: "masonry", label: "Masonry" }
+            ].map(option => (
+              <button
+                key={option.id}
+                type="button"
+                className={[
+                  "layout-toggle-btn",
+                  layoutMode === option.id ? "is-active" : ""
+                ].join(" ")}
+                onClick={() => setLayoutMode(option.id)}
+              >
+                {option.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className={["bookmark-grid", layoutMode === "masonry" ? "masonry" : ""].filter(Boolean).join(" ")}>
           {filtered.map(it => (
             <Card
               key={it.id}
@@ -324,6 +361,7 @@ export default function GridScreen() {
               image={settings.showThumbnails ? it.image : undefined}
               state={it.state}
               onClick={() => handleCardClick(it)}
+              layout={layoutMode}
             />
           ))}
         </div>

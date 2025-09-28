@@ -47,7 +47,7 @@ export default function HomeScreen({
           <p className="home-eyebrow">Welcome back to Cure8</p>
           <h1 className="home-title">Curate what matters most today.</h1>
           <p className="home-subtitle">
-            Save fresh inspiration, surface trusted resources, and keep your health knowledge within reach.
+            Save fresh inspiration, surface trusted resources, and keep your web finds within reach.
             Launch your day with quick captures, confident context, and a single hub for the links that matter.
           </p>
           <div className="home-actions">
@@ -117,7 +117,7 @@ export default function HomeScreen({
         <section className="home-empty">
           <div className="home-empty-card">
             <h3>No bookmarks yet</h3>
-            <p>Paste a URL or import an export file to start building your curated health library.</p>
+            <p>Paste a URL or import an export file to start building your curated library.</p>
             <div className="home-empty-actions">
               <button type="button" className="home-action primary" onClick={onQuickAdd}>
                 Add your first link
