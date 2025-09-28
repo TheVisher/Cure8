@@ -61,11 +61,46 @@ function parseAmazonMetadata(url, htmlMaybe) {
     || $('meta[property="og:title"]').attr('content')?.trim()
     || '';
 
-  const primaryImage = $('#landingImage').attr('data-old-hires')
+  let primaryImage = $('#landingImage').attr('data-old-hires')
+    || $('#landingImage').attr('data-a-hires')
     || $('#landingImage').attr('src')
     || $('img#imgBlkFront').attr('src')
     || $('meta[property="og:image"]').attr('content')
     || null;
+
+  if (!primaryImage) {
+    const dynamic = $('#landingImage').attr('data-a-dynamic-image');
+    if (dynamic) {
+      try {
+        const parsed = JSON.parse(dynamic.replace(/&quot;/g, '"'));
+        const firstKey = Object.keys(parsed)[0];
+        if (firstKey) primaryImage = firstKey;
+      } catch {}
+    }
+  }
+
+  if (!primaryImage) {
+    const wrapperImg = $('#imgTagWrapperId img').attr('data-old-hires')
+      || $('#imgTagWrapperId img').attr('src')
+      || $('[data-a-dynamic-image]').first().attr('data-a-dynamic-image')
+      || null;
+
+    if (wrapperImg) {
+      if (wrapperImg.startsWith('{') || wrapperImg.includes('&quot;')) {
+        try {
+          const parsed = JSON.parse(wrapperImg.replace(/&quot;/g, '"'));
+          const firstKey = Object.keys(parsed)[0];
+          if (firstKey) primaryImage = firstKey;
+        } catch {}
+      } else {
+        primaryImage = wrapperImg;
+      }
+    }
+  }
+
+  if (!primaryImage) {
+    primaryImage = $('meta[name="twitter:image"]').attr('content') || null;
+  }
 
   const bullets = $('#feature-bullets li span')
     .map((_, el) => $(el).text().trim())
@@ -86,10 +121,14 @@ function parseAmazonMetadata(url, htmlMaybe) {
 
 async function getOG(url) {
   try {
-    const { result } = await ogs({ 
-      url, 
-      timeout: 10000,
-      onlyGetOpenGraphInfo: false 
+    const { result } = await ogs({
+      url,
+      timeout: 12000,
+      onlyGetOpenGraphInfo: false,
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36',
+        'Accept-Language': 'en-US,en;q=0.9'
+      }
     });
     // open-graph-scraper returns images as array or object; normalize:
     let img = null;

@@ -30,9 +30,9 @@ export function AppShell({ sidebar, children }) {
       {/* Main Content Area with inset background */}
       <main className="absolute left-64 top-16 right-3 bottom-3 p-2 z-10">
         {/* Inset background for the content area */}
-        <div className="absolute inset-0 bg-background rounded-xl">
+        <div className="absolute inset-0 bg-background rounded-xl overflow-hidden">
           {/* Scrollable content area */}
-          <div className="h-full overflow-y-auto p-6">
+          <div className="h-full overflow-y-auto p-6 pb-10">
             {children}
           </div>
         </div>
@@ -51,7 +51,7 @@ function OmniBox() {
 
   // Debounced search
   React.useEffect(() => {
-    if (!isUrl && q.trim()) {
+    if (!isUrl) {
       const t = setTimeout(() => window.dispatchEvent(new CustomEvent("cure8.search", { detail: { q } })), 200);
       return () => clearTimeout(t);
     }

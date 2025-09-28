@@ -173,6 +173,7 @@ html, body, #root {
 .mx-4 { margin-left: 1rem; margin-right: 1rem; }
 .p-6 { padding: 1.5rem; }
 .space-y-4 > * + * { margin-top: 1rem; }
+.space-y-8 > * + * { margin-top: 2rem; }
 .block { display: block; }
 .break-all { word-break: break-all; }
 .h-32 { height: 8rem; }
