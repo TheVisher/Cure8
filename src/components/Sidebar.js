@@ -30,18 +30,21 @@ export function Sidebar({ active = "Home", onChange, onExport, onImport }) {
                     "w-[calc(100%-2rem)] mx-4 flex items-center gap-4 px-4 py-3 text-sm font-medium transition-all duration-200 text-left group border-0 outline-none rounded-xl",
                     item.id === active
                       ? "text-text-primary bg-white/8 shadow-[0_0_15px_rgba(139,92,246,0.2)]"
-                      : "text-text-secondary hover:text-text-primary hover:bg-white/5 hover:shadow-[0_0_20px_rgba(139,92,246,0.3)] bg-transparent"
+                      : "text-text-secondary hover:text-text-primary hover:bg-white/5 bg-transparent"
                   ].join(" ")}
                 >
                   <div className={[
                     "w-5 h-5 transition-colors duration-200",
-                    item.id === active ? "text-accent-purple" : "text-text-muted group-hover:text-text-secondary"
+                    item.id === active ? "text-accent-purple" : "text-text-muted group-hover:text-accent-purple"
                   ].join(" ")}>
                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
                       <path strokeLinecap="round" strokeLinejoin="round" d={item.icon} />
                     </svg>
                   </div>
-                  <span className="flex-1">{item.label}</span>
+                  <span className={[
+                    "flex-1 transition-all duration-200",
+                    item.id === active ? "text-glow-bottom" : ""
+                  ].join(" ")}>{item.label}</span>
                 </button>
               ))}
         </div>
@@ -52,9 +55,9 @@ export function Sidebar({ active = "Home", onChange, onExport, onImport }) {
             {bottomItems.map(item => (
               <button
                 key={item.id}
-                className="w-[calc(100%-2rem)] mx-4 flex items-center gap-4 px-4 py-3 text-sm font-medium text-text-secondary hover:text-text-primary hover:bg-white/5 hover:shadow-[0_0_20px_rgba(139,92,246,0.3)] transition-all duration-200 text-left group bg-transparent border-0 outline-none rounded-xl"
+                className="w-[calc(100%-2rem)] mx-4 flex items-center gap-4 px-4 py-3 text-sm font-medium text-text-secondary hover:text-text-primary hover:bg-white/5 transition-all duration-200 text-left group bg-transparent border-0 outline-none rounded-xl"
               >
-                <div className="w-5 h-5 text-text-muted group-hover:text-text-secondary transition-colors duration-200">
+                <div className="w-5 h-5 text-text-muted group-hover:text-accent-purple transition-colors duration-200">
                   <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
                     <path strokeLinecap="round" strokeLinejoin="round" d={item.icon} />
                   </svg>
