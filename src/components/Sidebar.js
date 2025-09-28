@@ -29,7 +29,7 @@ export function Sidebar({ active = "Home", onChange, onExport, onImport }) {
                   className={[
                     "w-[calc(100%-2rem)] mx-4 flex items-center gap-4 px-4 py-3 text-sm font-medium transition-all duration-200 text-left group border-0 outline-none rounded-xl",
                     item.id === active
-                      ? "text-text-primary bg-white/8 shadow-[0_0_15px_rgba(139,92,246,0.2)]"
+                      ? "text-text-primary bg-white/8"
                       : "text-text-secondary hover:text-text-primary hover:bg-white/5 bg-transparent"
                   ].join(" ")}
                 >
@@ -41,10 +41,7 @@ export function Sidebar({ active = "Home", onChange, onExport, onImport }) {
                       <path strokeLinecap="round" strokeLinejoin="round" d={item.icon} />
                     </svg>
                   </div>
-                  <span className={[
-                    "flex-1 transition-all duration-200",
-                    item.id === active ? "text-glow-bottom" : ""
-                  ].join(" ")}>{item.label}</span>
+                  <span className="flex-1">{item.label}</span>
                 </button>
               ))}
         </div>

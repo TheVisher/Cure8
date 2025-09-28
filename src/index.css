@@ -44,14 +44,7 @@ html, body, #root {
   scrollbar-color: rgba(255, 255, 255, 0.08) transparent;
 }
 
-/* Text glow effect for active sidebar items */
-.text-glow-bottom {
-  background: linear-gradient(to bottom, transparent 90%, rgba(139, 92, 246, 0.3) 100%);
-  background-clip: text;
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  text-shadow: 0 0 8px rgba(139, 92, 246, 0.4);
-}
+/* Removed problematic text glow effect */
 
 * { outline-color: #7C3AED; }
 
