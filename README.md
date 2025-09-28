@@ -6,6 +6,7 @@ Cure8 is a local-first bookmarking studio for catching links on the fly, auto-en
 
 - **Quick Capture Omnibox** – Paste or type from anywhere; Cure8 stores the link instantly and fetches metadata in the background.
 - **Auto Preview Service** – A bundled preview microservice (Node + Puppeteer) resolves titles, favicons, poster images, and descriptions for richer cards.
+- **Multi-Layout Canvas** – Instantly flip between Grid, Masonry, List, or Compact views depending on the artwork you’re browsing.
 - **Adaptive Boards** – Responsive grid with intelligent card sizing and animated hover glows that scale from phone to ultra-wide monitors.
 - **Powerful Search** – Debounced global search across titles and domains with instant feedback as you type.
 - **Import & Export** – JSON import/export keeps your collection portable and easy to back up or share.

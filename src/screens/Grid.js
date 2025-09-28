@@ -16,6 +16,12 @@ const defaultSettings = {
 
 const CATEGORY_IDS = new Set(["Home", "All", "Work", "Personal", "Favorites", "Recent"]);
 const LAYOUT_KEY = "cure8.layout";
+const LAYOUT_OPTIONS = [
+  { id: "grid", label: "Grid" },
+  { id: "masonry", label: "Masonry" },
+  { id: "list", label: "List" },
+  { id: "compact", label: "Compact" }
+];
 
 const randomId = () => {
   try {
@@ -76,7 +82,7 @@ export default function GridScreen() {
   const [layoutMode, setLayoutMode] = React.useState(() => {
     if (typeof window === "undefined") return "grid";
     const stored = window.localStorage.getItem(LAYOUT_KEY);
-    return stored === "masonry" ? "masonry" : "grid";
+    return LAYOUT_OPTIONS.some(option => option.id === stored) ? stored : "grid";
   });
 
   const persistItems = React.useCallback((updater) => {
@@ -333,10 +339,7 @@ export default function GridScreen() {
         <div className="layout-toolbar">
           <span className="layout-label">Layout</span>
           <div className="layout-toggle">
-            {[
-              { id: "grid", label: "Grid" },
-              { id: "masonry", label: "Masonry" }
-            ].map(option => (
+            {LAYOUT_OPTIONS.map(option => (
               <button
                 key={option.id}
                 type="button"
@@ -352,19 +355,37 @@ export default function GridScreen() {
           </div>
         </div>
 
-        <div className={["bookmark-grid", layoutMode === "masonry" ? "masonry" : ""].filter(Boolean).join(" ")}>
-          {filtered.map(it => (
-            <Card
-              key={it.id}
-              title={it.title}
-              domain={it.domain}
-              image={settings.showThumbnails ? it.image : undefined}
-              state={it.state}
-              onClick={() => handleCardClick(it)}
-              layout={layoutMode}
-            />
-          ))}
-        </div>
+        {layoutMode === "list" ? (
+          <div className="bookmark-list">
+            {filtered.map(it => (
+              <Card
+                key={it.id}
+                title={it.title}
+                domain={it.domain}
+                image={settings.showThumbnails ? it.image : undefined}
+                state={it.state}
+                onClick={() => handleCardClick(it)}
+                layout={layoutMode}
+                url={it.url}
+              />
+            ))}
+          </div>
+        ) : (
+          <div className={["bookmark-grid", layoutMode === "masonry" ? "masonry" : "", layoutMode === "compact" ? "compact" : ""].filter(Boolean).join(" ")}>
+            {filtered.map(it => (
+              <Card
+                key={it.id}
+                title={it.title}
+                domain={it.domain}
+                image={settings.showThumbnails ? it.image : undefined}
+                state={it.state}
+                onClick={() => handleCardClick(it)}
+                layout={layoutMode}
+                url={it.url}
+              />
+            ))}
+          </div>
+        )}
 
         {/* Details Modal */}
         {showDetailsModal && selectedItem && (
