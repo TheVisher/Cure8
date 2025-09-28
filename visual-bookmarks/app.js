@@ -536,8 +536,20 @@ document.addEventListener('DOMContentLoaded', function() {
       
       if (metadata.title && metadata.title !== metadata.domain) {
         const titleInput = document.querySelector('#add-bookmark-form input[name="title"]');
-        if (titleInput && !titleInput.value) {
-          titleInput.value = metadata.title;
+        if (titleInput && !titleInput.value.trim()) {
+          // Clean up movie titles - remove rating info for cleaner display
+          let cleanTitle = metadata.title;
+          
+          // For IMDb movies, remove the rating part after the pipe
+          if (metadata.isMovie && cleanTitle.includes(' | ')) {
+            cleanTitle = cleanTitle.split(' | ')[0];
+          }
+          
+          // Remove year in parentheses for cleaner titles
+          cleanTitle = cleanTitle.replace(/\s*\([^)]*\)\s*$/, '').trim();
+          
+          titleInput.value = cleanTitle;
+          console.log('Auto-populated title:', cleanTitle);
         }
       }
     } catch (error) {
@@ -548,6 +560,20 @@ document.addEventListener('DOMContentLoaded', function() {
   // Auto-populate title when URL is entered
   const urlInput = document.querySelector('#add-bookmark-form input[name="url"]');
   if (urlInput) {
+    let timeoutId;
+    
+    // Auto-populate on input (as you type)
+    urlInput.addEventListener('input', function() {
+      const url = this.value.trim();
+      if (url && url.startsWith('http')) {
+        clearTimeout(timeoutId);
+        timeoutId = setTimeout(() => {
+          autoPopulateTitle(url);
+        }, 500); // Wait 500ms after user stops typing
+      }
+    });
+    
+    // Also populate on blur (when clicking away)
     urlInput.addEventListener('blur', function() {
       autoPopulateTitle(this.value);
     });
