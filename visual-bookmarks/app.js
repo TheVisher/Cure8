@@ -315,8 +315,50 @@ function filterBookmarksByCategory(category) {
   }
 }
 
-// Open edit modal with bookmark data
-function openEditModal(bookmarkIndex) {
+// Open metadata modal with bookmark data
+function openMetadataModal(bookmarkIndex) {
+  const bookmark = bookmarks[bookmarkIndex];
+  if (!bookmark) return;
+  
+  // Fill the metadata view with current data
+  const titleElement = document.querySelector('.details-modal-title');
+  const urlElement = document.querySelector('.details-modal-url');
+  const notesElement = document.querySelector('.details-modal-notes');
+  const tagsElement = document.querySelector('.details-modal-tags');
+  
+  titleElement.textContent = bookmark.title;
+  urlElement.textContent = bookmark.url;
+  
+  if (bookmark.notes) {
+    notesElement.textContent = bookmark.notes;
+    notesElement.style.display = 'block';
+  } else {
+    notesElement.style.display = 'none';
+  }
+  
+  if (bookmark.tags) {
+    const tagsArray = bookmark.tags.split(',').map(tag => tag.trim());
+    tagsElement.innerHTML = tagsArray.map(tag => `<span class="tag">${tag}</span>`).join('');
+    tagsElement.style.display = 'block';
+  } else {
+    tagsElement.style.display = 'none';
+  }
+  
+  // Store the bookmark index for later use
+  document.getElementById('details-modal').setAttribute('data-bookmark-index', bookmarkIndex);
+  
+  // Show metadata view and hide edit view
+  document.getElementById('metadata-view').classList.remove('hidden');
+  document.getElementById('edit-view').classList.add('hidden');
+  
+  // Show the modal
+  document.querySelector('.modal-overlay').classList.add('active');
+  document.getElementById('details-modal').classList.add('active');
+}
+
+// Switch to edit view within the same modal
+function switchToEditView() {
+  const bookmarkIndex = parseInt(document.getElementById('details-modal').getAttribute('data-bookmark-index'));
   const bookmark = bookmarks[bookmarkIndex];
   if (!bookmark) return;
   
@@ -327,12 +369,15 @@ function openEditModal(bookmarkIndex) {
   form.querySelector('[name="notes"]').value = bookmark.notes || '';
   form.querySelector('[name="tags"]').value = bookmark.tags || '';
   
-  // Store the bookmark index in the form
-  form.setAttribute('data-bookmark-index', bookmarkIndex);
-  
-  // Show the modal
-  document.querySelector('.modal-overlay').classList.add('active');
-  document.getElementById('edit-modal').classList.add('active');
+  // Hide metadata view and show edit view
+  document.getElementById('metadata-view').classList.add('hidden');
+  document.getElementById('edit-view').classList.remove('hidden');
+}
+
+// Switch back to metadata view
+function switchToMetadataView() {
+  document.getElementById('edit-view').classList.add('hidden');
+  document.getElementById('metadata-view').classList.remove('hidden');
 }
 
 // Update bookmark function
@@ -485,21 +530,31 @@ document.addEventListener('DOMContentLoaded', function() {
     }, 200);
   });
   
-  // Edit bookmark functionality
+  // Card click functionality - opens metadata modal
   document.addEventListener('click', function(e) {
     // Check if a card was clicked (but not the delete button)
     if (e.target.closest('.card-clickable')) {
       const cardClickable = e.target.closest('.card-clickable');
       const bookmarkIndex = parseInt(cardClickable.getAttribute('data-bookmark-index'));
       
-      // Don't open edit modal if delete button was clicked
+      // Don't open modal if delete button was clicked
       if (e.target.classList.contains('delete-btn')) {
         return;
       }
       
-      // Open edit modal with current bookmark data
-      openEditModal(bookmarkIndex);
+      // Open metadata modal with current bookmark data
+      openMetadataModal(bookmarkIndex);
     }
+  });
+  
+  // Edit button click handler
+  document.getElementById('edit-bookmark-btn').addEventListener('click', function() {
+    switchToEditView();
+  });
+  
+  // Cancel edit button click handler
+  document.querySelector('.cancel-edit-btn').addEventListener('click', function() {
+    switchToMetadataView();
   });
   
   // Edit bookmark form submission
@@ -513,8 +568,8 @@ document.addEventListener('DOMContentLoaded', function() {
     const notes = formData.get('notes');
     const tags = formData.get('tags');
     
-    // Get the bookmark index from the form
-    const bookmarkIndex = parseInt(form.getAttribute('data-bookmark-index'));
+    // Get the bookmark index from the modal
+    const bookmarkIndex = parseInt(document.getElementById('details-modal').getAttribute('data-bookmark-index'));
     
     if (!title || !url) {
       alert('Please fill in title and URL');
@@ -527,11 +582,13 @@ document.addEventListener('DOMContentLoaded', function() {
     // Update the bookmark
     updateBookmark(bookmarkIndex, { title, url, notes, tags });
     
-    // Close modal
-    document.querySelector('.modal-overlay').classList.remove('active');
-    document.getElementById('edit-modal').classList.remove('active');
+    // Switch back to metadata view to show updated data
+    switchToMetadataView();
     
-    console.log('Edit modal closed');
+    // Refresh the metadata view with updated data
+    openMetadataModal(bookmarkIndex);
+    
+    console.log('Bookmark updated and modal refreshed');
   });
   
   // Search functionality

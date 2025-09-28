@@ -75,10 +75,26 @@
   <!-- Card details modal -->
   <div class="modal" id="details-modal">
     <button class="modal-close">&times;</button>
-    <strong class="details-modal-title"></strong>
-    <p class="details-modal-url"></p>
-    <div class="details-modal-notes"></div>
-    <div class="details-modal-tags"></div>
+    <div class="modal-content" id="metadata-view">
+      <strong class="details-modal-title"></strong>
+      <p class="details-modal-url"></p>
+      <div class="details-modal-notes"></div>
+      <div class="details-modal-tags"></div>
+      <button class="edit-button" id="edit-bookmark-btn">Edit Bookmark</button>
+    </div>
+    <div class="modal-content hidden" id="edit-view">
+      <h2>Edit Content</h2>
+      <form id="edit-bookmark-form">
+        <input type="text" placeholder="Title" name="title" autocomplete="off"/>
+        <input type="url" placeholder="URL" name="url" required autocomplete="off"/>
+        <input type="text" placeholder="Tags (comma separated)" name="tags"/>
+        <textarea placeholder="Notes" name="notes"></textarea>
+        <div class="form-actions">
+          <button type="button" class="cancel-edit-btn">Cancel</button>
+          <button type="submit" class="update-btn">Update</button>
+        </div>
+      </form>
+    </div>
   </div>
   <!-- Add new bookmark modal -->
   <div class="modal" id="add-modal">
@@ -93,18 +109,6 @@
     </form>
   </div>
   
-  <!-- Edit bookmark modal -->
-  <div class="modal" id="edit-modal">
-    <button class="modal-close">&times;</button>
-    <h2>Edit Content</h2>
-    <form id="edit-bookmark-form">
-      <input type="text" placeholder="Title" name="title" autocomplete="off"/>
-      <input type="url" placeholder="URL" name="url" required autocomplete="off"/>
-      <input type="text" placeholder="Tags (comma separated)" name="tags"/>
-      <textarea placeholder="Notes" name="notes"></textarea>
-      <button type="submit">Update</button>
-    </form>
-  </div>
   <script src="https://cdn.jsdelivr.net/npm/muuri@0.9.5/dist/muuri.min.js"></script>
   <script src="app.js"></script>
 </body>

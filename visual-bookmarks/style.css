@@ -728,7 +728,7 @@ nav {
   min-width: 420px;
   min-height: 260px;
   z-index: 9999;
-  padding: 38px 38px 32px 38px;
+  padding: 0;
   opacity: 0;
   transform: translate(-50%, -60%) scale(0.94);
   transition: opacity .28s cubic-bezier(.4,.29,.29,.97),
@@ -774,6 +774,89 @@ nav {
   cursor: pointer;
 }
 
+/* Modal content transitions */
+.modal-content {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 38px 38px 32px 38px;
+  transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.modal-content.hidden {
+  opacity: 0;
+  transform: translateX(100%);
+  pointer-events: none;
+}
+
+.modal-content:not(.hidden) {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+/* Ensure modal container has relative positioning for absolute children */
+#details-modal {
+  position: relative;
+}
+
+/* Edit button in metadata modal */
+.edit-button {
+  background: linear-gradient(130deg, #7B7FDE 0%, #F3047E 100%);
+  color: #fff;
+  border-radius: 8px;
+  border: none;
+  padding: 0.8em 1.5em;
+  font-size: 1rem;
+  box-shadow: 0 2px 16px #7B7FDE23;
+  cursor: pointer;
+  margin-top: 20px;
+  align-self: flex-start;
+}
+
+.edit-button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 20px #7B7FDE33;
+}
+
+/* Form actions for edit view */
+.form-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  margin-top: 18px;
+}
+
+.cancel-edit-btn {
+  background: rgba(255,255,255,0.1);
+  color: #fff;
+  border-radius: 8px;
+  border: 1px solid rgba(255,255,255,0.2);
+  padding: 0.8em 1.5em;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.cancel-edit-btn:hover {
+  background: rgba(255,255,255,0.15);
+}
+
+.update-btn {
+  background: linear-gradient(130deg, #7B7FDE 0%, #F3047E 100%);
+  color: #fff;
+  border-radius: 8px;
+  border: none;
+  padding: 0.8em 1.5em;
+  font-size: 1rem;
+  box-shadow: 0 2px 16px #7B7FDE23;
+  cursor: pointer;
+}
+
 /* Edit bookmark form styling - matches add form */
 #edit-bookmark-form {
   display: flex;
@@ -788,18 +871,6 @@ nav {
   background: rgba(255,255,255,0.11);
   color: #fff;
   font-size: 1.07rem;
-}
-#edit-bookmark-form button[type="submit"] {
-  align-self: flex-end;
-  margin-top: 12px;
-  background: linear-gradient(130deg, #7B7FDE 0%, #F3047E 100%);
-  color: #fff;
-  border-radius: 8px;
-  border: none;
-  padding: 0.9em 2em;
-  font-size: 1.12rem;
-  box-shadow: 0 2px 16px #7B7FDE23;
-  cursor: pointer;
 }
 
 /* CURE8 CARD Glassmorphism */
