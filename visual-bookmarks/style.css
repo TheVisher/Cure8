@@ -804,10 +804,6 @@ nav {
   transform: translateX(0);
 }
 
-/* Ensure modal container has relative positioning for absolute children */
-#details-modal {
-  position: relative;
-}
 
 /* Edit button in metadata modal */
 .edit-button {
