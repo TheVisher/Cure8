@@ -656,6 +656,17 @@ nav {
   text-shadow: 0 0 8px rgba(123, 127, 222, 0.4);
 }
 
+/* Clickable URL styling */
+.clickable-url {
+  cursor: pointer;
+  transition: color 0.2s ease, text-shadow 0.2s ease;
+}
+
+.clickable-url:hover {
+  color: #7B7FDE;
+  text-shadow: 0 0 8px rgba(123, 127, 222, 0.4);
+}
+
 .card-url {
   font-size: 1.05em;
   color: #c7cbef;

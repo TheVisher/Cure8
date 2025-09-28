@@ -71,9 +71,7 @@ function createCardElement(data, index) {
         <hr class="card-divider">
         <div class="card-footer">
           <strong class="card-title clickable-title" data-url="${data.url}">${data.title}</strong>
-          <p class="card-url">${data.url.replace(/^https?:\/\/(www\.)?/,'').split('/')[0]}</p>
-          ${data.notes ? `<div class="card-notes">${data.notes}</div>` : ''}
-          ${data.tags ? `<div class="card-tags">${data.tags.split(',').map(t => `<span>${t.trim()}</span>`).join(' ')}</div>` : ''}
+          <p class="card-url clickable-url" data-url="${data.url}">${data.url.replace(/^https?:\/\/(www\.)?/,'').split('/')[0]}</p>
         </div>
       </div>
     </div>
@@ -96,10 +94,20 @@ function createCardElement(data, index) {
     }
   });
   
+  // Add click handler for URL to open URL
+  const urlElement = item.querySelector('.clickable-url');
+  urlElement.addEventListener('click', function(e) {
+    e.stopPropagation();
+    const url = this.getAttribute('data-url');
+    if (url) {
+      window.open(url, '_blank');
+    }
+  });
+  
   // Add click handler for card (thumbnail and other areas)
   const cardContent = item.querySelector('.card-content');
   cardContent.addEventListener('click', function(e) {
-    if (e.target.classList.contains('delete-btn') || e.target.classList.contains('clickable-title')) return;
+    if (e.target.classList.contains('delete-btn') || e.target.classList.contains('clickable-title') || e.target.classList.contains('clickable-url')) return;
     
     document.querySelector('.details-modal-title').textContent = data.title;
     document.querySelector('.details-modal-url').textContent = data.url;
@@ -470,7 +478,11 @@ function updateCardInDOM(bookmarkIndex, bookmarkData) {
     // Update the data-url attribute for the clickable title
     cardTitle.setAttribute('data-url', bookmarkData.url);
   }
-  if (cardUrl) cardUrl.textContent = bookmarkData.url.replace(/^https?:\/\/(www\.)?/,'').split('/')[0];
+  if (cardUrl) {
+    cardUrl.textContent = bookmarkData.url.replace(/^https?:\/\/(www\.)?/,'').split('/')[0];
+    // Update the data-url attribute for the clickable URL
+    cardUrl.setAttribute('data-url', bookmarkData.url);
+  }
   
   // Update notes
   if (bookmarkData.notes) {
