@@ -6,7 +6,7 @@ export function AppShell({ sidebar, children }) {
       {/* Sidebar Content */}
       <aside className="absolute left-0 top-0 w-64 h-full z-10">
         <div className="h-full flex flex-col p-4">
-          <div className="font-bold text-xl text-accent-purple mb-6">Cure8</div>
+          <div className="font-bold text-2xl text-accent-purple mb-8 mt-4">Cure8</div>
           {sidebar}
         </div>
       </aside>
