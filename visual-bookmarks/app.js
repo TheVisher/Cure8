@@ -566,6 +566,12 @@ document.addEventListener('DOMContentLoaded', function() {
           // Clean up movie titles - remove rating info for cleaner display
           let cleanTitle = metadata.title;
           
+          // Remove star ratings and rating symbols
+          cleanTitle = cleanTitle.replace(/\s*⭐\s*\d+\.?\d*\/?\d*\.?\d*/g, ''); // Remove ⭐ 8.5/10 style ratings
+          cleanTitle = cleanTitle.replace(/\s*\d+\.?\d*\s*⭐/g, ''); // Remove 8.5⭐ style ratings
+          cleanTitle = cleanTitle.replace(/\s*\(\s*⭐\s*\d+\.?\d*\/?\d*\.?\d*\s*\)/g, ''); // Remove (⭐ 8.5/10) style ratings
+          cleanTitle = cleanTitle.replace(/\s*\(\s*\d+\.?\d*\s*⭐\s*\)/g, ''); // Remove (8.5⭐) style ratings
+          
           // For IMDb movies, remove the rating part after the pipe
           if (metadata.isMovie && cleanTitle.includes(' | ')) {
             cleanTitle = cleanTitle.split(' | ')[0];
