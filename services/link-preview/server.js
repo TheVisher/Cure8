@@ -26,6 +26,7 @@ app.use((req, res, next) => {
 app.use(express.json({ limit: '1mb' }));
 
 const PORT = process.env.PORT || 8787;
+const HOST = process.env.HOST || '0.0.0.0';
 
 ensureCacheDirs();
 
@@ -115,6 +116,6 @@ app.get('/screenshot.png', async (req, res) => {
   }
 });
 
-app.listen(PORT, () => {
-  console.log(`[link-preview] listening on http://localhost:${PORT}`);
+app.listen(PORT, HOST, () => {
+  console.log(`[link-preview] listening on http://${HOST}:${PORT}`);
 });

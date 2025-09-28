@@ -1,7 +1,5 @@
 import React from "react";
 
-const cats = ["All", "Work", "Personal"];
-
 export function Sidebar({ active = "Home", onChange, onExport, onImport }) {
   const navigationItems = [
     { id: "Home", label: "Home", icon: "M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" },
@@ -52,9 +50,22 @@ export function Sidebar({ active = "Home", onChange, onExport, onImport }) {
             {bottomItems.map(item => (
               <button
                 key={item.id}
-                className="w-[calc(100%-2rem)] mx-4 flex items-center gap-4 px-4 py-3 text-sm font-medium text-text-secondary hover:text-text-primary hover:bg-white/5 transition-all duration-200 text-left group bg-transparent border-0 outline-none rounded-xl"
+                onClick={() => onChange?.(item.id)}
+                className={[
+                  "w-[calc(100%-2rem)] mx-4 flex items-center gap-4 px-4 py-3 text-sm font-medium transition-all duration-200 text-left group bg-transparent border-0 outline-none rounded-xl",
+                  item.id === active
+                    ? "text-text-primary bg-white/8"
+                    : "text-text-secondary hover:text-text-primary hover:bg-white/5"
+                ].join(" ")}
               >
-                <div className="w-5 h-5 text-text-muted group-hover:text-accent-purple transition-colors duration-200">
+                <div
+                  className={[
+                    "w-5 h-5 transition-colors duration-200",
+                    item.id === active
+                      ? "text-accent-purple"
+                      : "text-text-muted group-hover:text-accent-purple"
+                  ].join(" ")}
+                >
                   <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
                     <path strokeLinecap="round" strokeLinejoin="round" d={item.icon} />
                   </svg>

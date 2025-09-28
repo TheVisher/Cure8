@@ -13,8 +13,9 @@ export async function previewForUrl(url) {
 
   // Special handling for IMDb URLs - extract movie title
   let title = og.ogTitle || og.twitterTitle || base.title || base.domain;
+  let description = og.ogDescription || og.twitterDescription || base.description || '';
   let isMovie = false;
-  
+
   if (url.includes('imdb.com/title/')) {
     isMovie = true;
     // Try to extract movie title from the page title
@@ -23,14 +24,63 @@ export async function previewForUrl(url) {
     }
   }
 
+  if (isAmazonUrl(url)) {
+    const amazon = parseAmazonMetadata(url, og.html);
+    if (amazon.title) title = amazon.title;
+    if (amazon.description) description = amazon.description;
+    if (!hero && amazon.image) hero = amazon.image;
+  }
+
   return {
     url: base.url,
     domain: base.domain,
-    title: title,
-    description: og.ogDescription || og.twitterDescription || base.description || '',
+    title,
+    description,
     favicon: base.favicon,
     heroImage: hero,
-    isMovie: isMovie
+    cardImage: hero,
+    isMovie
+  };
+}
+
+function isAmazonUrl(url) {
+  try {
+    const { hostname } = new URL(url);
+    return /amazon\./i.test(hostname);
+  } catch {
+    return false;
+  }
+}
+
+function parseAmazonMetadata(url, htmlMaybe) {
+  if (!htmlMaybe) return {};
+  const $ = cheerio.load(htmlMaybe);
+
+  const title = $('#productTitle').text().trim()
+    || $('meta[name="title"]').attr('content')?.trim()
+    || $('meta[property="og:title"]').attr('content')?.trim()
+    || '';
+
+  const primaryImage = $('#landingImage').attr('data-old-hires')
+    || $('#landingImage').attr('src')
+    || $('img#imgBlkFront').attr('src')
+    || $('meta[property="og:image"]').attr('content')
+    || null;
+
+  const bullets = $('#feature-bullets li span')
+    .map((_, el) => $(el).text().trim())
+    .get()
+    .filter(Boolean);
+
+  const description = bullets.length
+    ? bullets.slice(0, 5).join(' • ')
+    : $('meta[name="description"]').attr('content')?.trim()
+      || '';
+
+  return {
+    title,
+    description,
+    image: primaryImage ? resolveUrl(url, primaryImage) : null
   };
 }
 
