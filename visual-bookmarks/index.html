@@ -49,6 +49,14 @@
           <span class="button-text">+ Add Category</span>
         </button>
       </nav>
+      <div class="sidebar-actions">
+        <button class="add-bookmark-btn">+ Add Content</button>
+        <div class="backup-controls">
+          <button class="backup-btn" id="export-btn">📁 Export</button>
+          <input type="file" id="import-file" accept=".json" style="display: none;">
+          <button class="backup-btn" id="import-btn">📂 Import</button>
+        </div>
+      </div>
     </aside>
     <section class="content-area">
       <header class="topbar">
@@ -67,7 +75,6 @@
         <section class="bookmarks-grid" id="muuri-grid">
           <!-- Cards will be dynamically added here -->
         </section>
-        <button class="add-bookmark-btn">+</button>
       </main>
     </section>
   </div>

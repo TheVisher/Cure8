@@ -1,3 +1,67 @@
+/* Custom Scrollbar Styling */
+::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 10px;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(145deg, rgba(123, 127, 222, 0.6) 0%, rgba(139, 92, 246, 0.3) 100%);
+  border-radius: 10px;
+  border: 2px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(8px);
+  transition: all 0.3s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(145deg, rgba(123, 127, 222, 0.8) 0%, rgba(139, 92, 246, 0.5) 100%);
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 4px 15px rgba(123, 127, 222, 0.3);
+}
+
+::-webkit-scrollbar-thumb:active {
+  background: linear-gradient(145deg, rgba(123, 127, 222, 0.9) 0%, rgba(139, 92, 246, 0.6) 100%);
+  border: 2px solid rgba(255, 255, 255, 0.3);
+}
+
+::-webkit-scrollbar-corner {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 10px;
+}
+
+/* Firefox Scrollbar Styling */
+html {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(123, 127, 222, 0.6) rgba(255, 255, 255, 0.05);
+}
+
+/* Additional scrollbar styling for specific containers */
+.bookmarks-grid {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(123, 127, 222, 0.6) rgba(255, 255, 255, 0.05);
+}
+
+.bookmarks-grid::-webkit-scrollbar {
+  width: 8px;
+}
+
+.bookmarks-grid::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 6px;
+}
+
+.bookmarks-grid::-webkit-scrollbar-thumb {
+  background: linear-gradient(145deg, rgba(123, 127, 222, 0.5) 0%, rgba(139, 92, 246, 0.2) 100%);
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
 body {
   margin: 0;
   font-family: 'Inter', sans-serif;
@@ -72,6 +136,8 @@ body {
     inset 0 1px 0 rgba(255, 255, 255, 0.05);
   overflow: hidden;
   z-index: 2;
+  display: flex;
+  flex-direction: column;
 }
 
 /* CURE8 CONTENT AREA */
@@ -702,24 +768,58 @@ nav {
   z-index: 10;
 }
 
-/* CURE8 ADD CONTENT BUTTON */
+/* CURE8 SIDEBAR ACTIONS */
+.sidebar-actions {
+  margin-top: auto;
+  padding: 0 20px 24px 20px;
+}
+
+/* CURE8 ADD CONTENT BUTTON - Now in sidebar */
 .add-bookmark-btn {
-  position: fixed;
-  bottom: 48px;
-  right: 48px;
-  width: 64px;
-  height: 64px;
-  border-radius: 50%;
+  width: 100%;
   background: linear-gradient(130deg, #7B7FDE 0%, #E94560 100%);
   color: #fff;
-  font-size: 2.8rem;
+  font-size: 1.1rem;
+  font-weight: 600;
   border: none;
-  box-shadow: 0 2px 24px rgba(0,0,0,0.13);
+  border-radius: 16px;
+  padding: 16px 20px;
   cursor: pointer;
-  transition: box-shadow .2s;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 20px rgba(123, 127, 222, 0.2);
+  letter-spacing: 0.02em;
 }
+
 .add-bookmark-btn:hover {
-  box-shadow: 0 4px 36px rgba(123, 127, 222, 0.16);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 28px rgba(123, 127, 222, 0.3);
+}
+
+/* Backup controls */
+.backup-controls {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.backup-btn {
+  flex: 1;
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  font-size: 0.9rem;
+  font-weight: 500;
+  border: none;
+  border-radius: 12px;
+  padding: 10px 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.backup-btn:hover {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.25);
+  transform: translateY(-1px);
 }
 
 /* OVERLAY */

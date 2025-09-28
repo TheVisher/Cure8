@@ -1,5 +1,164 @@
 console.log("Cure8 - Content Curation Platform ready for initialization.");
 
+// Backup system for data protection
+const BACKUP_PREFIX = 'cure8_backup_';
+const MAX_BACKUPS = 10; // Keep last 10 backups
+
+// Create automatic backup before any data modification
+function createBackup(reason = 'manual') {
+  try {
+    const currentData = localStorage.getItem('cure8_curated_content');
+    if (!currentData) return;
+    
+    const timestamp = new Date().toISOString();
+    const backupKey = `${BACKUP_PREFIX}${timestamp}_${reason}`;
+    
+    // Store backup
+    localStorage.setItem(backupKey, currentData);
+    
+    // Clean up old backups (keep only last 10)
+    cleanupOldBackups();
+    
+    console.log(`✅ Backup created: ${backupKey}`);
+    return backupKey;
+  } catch (error) {
+    console.error('❌ Backup failed:', error);
+    return null;
+  }
+}
+
+// Clean up old backups to prevent localStorage bloat
+function cleanupOldBackups() {
+  try {
+    const backupKeys = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key && key.startsWith(BACKUP_PREFIX)) {
+        backupKeys.push(key);
+      }
+    }
+    
+    // Sort by timestamp (newest first)
+    backupKeys.sort().reverse();
+    
+    // Remove excess backups
+    if (backupKeys.length > MAX_BACKUPS) {
+      const toRemove = backupKeys.slice(MAX_BACKUPS);
+      toRemove.forEach(key => localStorage.removeItem(key));
+      console.log(`🧹 Cleaned up ${toRemove.length} old backups`);
+    }
+  } catch (error) {
+    console.error('❌ Backup cleanup failed:', error);
+  }
+}
+
+// List all available backups
+function listBackups() {
+  const backups = [];
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i);
+    if (key && key.startsWith(BACKUP_PREFIX)) {
+      const timestamp = key.replace(BACKUP_PREFIX, '').split('_')[0];
+      const reason = key.replace(BACKUP_PREFIX, '').split('_').slice(1).join('_');
+      backups.push({
+        key: key,
+        timestamp: timestamp,
+        reason: reason,
+        date: new Date(timestamp).toLocaleString()
+      });
+    }
+  }
+  
+  // Sort by timestamp (newest first)
+  return backups.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+}
+
+// Restore from backup
+function restoreFromBackup(backupKey) {
+  try {
+    const backupData = localStorage.getItem(backupKey);
+    if (!backupData) {
+      console.error('❌ Backup not found:', backupKey);
+      return false;
+    }
+    
+    // Create backup of current state before restoring
+    createBackup('before_restore');
+    
+    // Restore the data
+    localStorage.setItem('cure8_curated_content', backupData);
+    
+    // Reload bookmarks and re-render
+    bookmarks = JSON.parse(backupData);
+    renderAllCards();
+    
+    console.log(`✅ Restored from backup: ${backupKey}`);
+    return true;
+  } catch (error) {
+    console.error('❌ Restore failed:', error);
+    return false;
+  }
+}
+
+// Export data for manual backup
+function exportBookmarks() {
+  try {
+    const data = {
+      bookmarks: bookmarks,
+      exportDate: new Date().toISOString(),
+      version: '1.0'
+    };
+    
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `cure8_bookmarks_${new Date().toISOString().split('T')[0]}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    
+    console.log('✅ Bookmarks exported');
+    return true;
+  } catch (error) {
+    console.error('❌ Export failed:', error);
+    return false;
+  }
+}
+
+// Import data from file
+function importBookmarks(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const data = JSON.parse(e.target.result);
+        
+        if (!data.bookmarks || !Array.isArray(data.bookmarks)) {
+          throw new Error('Invalid file format');
+        }
+        
+        // Create backup before import
+        createBackup('before_import');
+        
+        // Import the data
+        bookmarks = data.bookmarks;
+        localStorage.setItem('cure8_curated_content', JSON.stringify(bookmarks));
+        renderAllCards();
+        
+        console.log(`✅ Imported ${bookmarks.length} bookmarks`);
+        resolve(true);
+      } catch (error) {
+        console.error('❌ Import failed:', error);
+        reject(error);
+      }
+    };
+    reader.readAsText(file);
+  });
+}
+
 // Debug function to check curated content data
 function debugCuratedContent() {
   console.log('=== DEBUGGING CURE8 CURATED CONTENT ===');
@@ -7,7 +166,21 @@ function debugCuratedContent() {
   console.log('Curated content count:', bookmarks.length);
   console.log('Grid element found:', !!document.querySelector('#muuri-grid'));
   console.log('Muuri grid instance:', !!muuriGrid);
+  
+  // Show backup info
+  const backups = listBackups();
+  console.log('Available backups:', backups.length);
+  if (backups.length > 0) {
+    console.log('Latest backup:', backups[0]);
+  }
 }
+
+// Make backup functions globally available for debugging
+window.createBackup = createBackup;
+window.listBackups = listBackups;
+window.restoreFromBackup = restoreFromBackup;
+window.exportBookmarks = exportBookmarks;
+window.importBookmarks = importBookmarks;
 
 let bookmarks = JSON.parse(localStorage.getItem('cure8_curated_content') || '[]');
 let muuriGrid; // Muuri grid instance
@@ -42,6 +215,7 @@ function initMuuriGrid() {
 
 // Save bookmark order to localStorage
 function saveBookmarkOrder() {
+  createBackup('save_order');
   localStorage.setItem('cure8_curated_content', JSON.stringify(bookmarks));
 }
 
@@ -161,6 +335,7 @@ function addCard({ title, url, notes, tags }) {
   bookmarks.unshift(newBookmark);
   
   // Save to localStorage
+  createBackup('add_card');
   localStorage.setItem('cure8_curated_content', JSON.stringify(bookmarks));
   
   console.log('Added new bookmark:', newBookmark);
@@ -189,6 +364,7 @@ function deleteCard(index) {
   bookmarks.splice(index, 1);
   
   // Save to localStorage
+  createBackup('delete_card');
   localStorage.setItem('cure8_curated_content', JSON.stringify(bookmarks));
   
   // Re-render all cards
@@ -206,6 +382,7 @@ function undoLastDeletion() {
   bookmarks.splice(lastDeletedCard.index, 0, lastDeletedCard.bookmark);
   
   // Save to localStorage
+  createBackup('undo_delete');
   localStorage.setItem('cure8_curated_content', JSON.stringify(bookmarks));
   
   // Re-render all cards
@@ -516,6 +693,7 @@ function updateBookmark(bookmarkIndex, newData) {
   };
   
   // Save to localStorage
+  createBackup('update_bookmark');
   localStorage.setItem('cure8_curated_content', JSON.stringify(bookmarks));
   
   // Update the specific card in the DOM instead of re-rendering all
@@ -836,9 +1014,40 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   });
   
+  // Backup controls
+  document.getElementById('export-btn').addEventListener('click', function() {
+    exportBookmarks();
+  });
+  
+  document.getElementById('import-btn').addEventListener('click', function() {
+    document.getElementById('import-file').click();
+  });
+  
+  document.getElementById('import-file').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (file) {
+      importBookmarks(file)
+        .then(() => {
+          alert(`✅ Successfully imported bookmarks!`);
+          // Clear the file input
+          e.target.value = '';
+        })
+        .catch((error) => {
+          alert(`❌ Import failed: ${error.message}`);
+          // Clear the file input
+          e.target.value = '';
+        });
+    }
+  });
+  
   // Initialize the grid
   console.log('DOM loaded, initializing grid...');
   console.log('Bookmarks from localStorage:', bookmarks);
+  
+  // Create initial backup if we have data
+  if (bookmarks.length > 0) {
+    createBackup('app_startup');
+  }
   
   // Small delay to ensure DOM is fully ready
   setTimeout(() => {
