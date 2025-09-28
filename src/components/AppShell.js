@@ -2,9 +2,9 @@ import React from "react";
 
 export function AppShell({ sidebar, children }) {
   return (
-    <div className="h-screen text-text-primary bg-surface overflow-hidden">
+    <div className="fixed inset-0 text-text-primary bg-surface overflow-hidden">
       {/* Sidebar Content */}
-      <aside className="absolute left-0 top-0 w-64 h-screen z-10">
+      <aside className="absolute left-0 top-0 w-64 h-full z-10">
         <div className="h-full flex flex-col p-4">
           <div className="font-bold text-xl text-accent-purple mb-6">Cure8</div>
           {sidebar}
