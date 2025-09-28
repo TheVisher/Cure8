@@ -457,6 +457,18 @@ nav {
   flex-direction: column;
 }
 
+/* Clickable card area */
+.card-clickable {
+  cursor: pointer;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.card-clickable:hover {
+  opacity: 0.9;
+}
+
 /* Shadow-like effect for hovering illusion */
 .card-content::before {
   content: "";
@@ -750,6 +762,34 @@ nav {
   font-size: 1.07rem;
 }
 #add-bookmark-form button[type="submit"] {
+  align-self: flex-end;
+  margin-top: 12px;
+  background: linear-gradient(130deg, #7B7FDE 0%, #F3047E 100%);
+  color: #fff;
+  border-radius: 8px;
+  border: none;
+  padding: 0.9em 2em;
+  font-size: 1.12rem;
+  box-shadow: 0 2px 16px #7B7FDE23;
+  cursor: pointer;
+}
+
+/* Edit bookmark form styling - matches add form */
+#edit-bookmark-form {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+#edit-bookmark-form input,
+#edit-bookmark-form textarea {
+  padding: 11px 16px;
+  border-radius: 9px;
+  border: none;
+  background: rgba(255,255,255,0.11);
+  color: #fff;
+  font-size: 1.07rem;
+}
+#edit-bookmark-form button[type="submit"] {
   align-self: flex-end;
   margin-top: 12px;
   background: linear-gradient(130deg, #7B7FDE 0%, #F3047E 100%);

@@ -66,13 +66,15 @@ function createCardElement(data, index) {
   item.innerHTML = `
     <div class="card-content">
       <button class="delete-btn" title="Delete content">&times;</button>
-      <img class="card-thumbnail" src="${thumbnailUrl}" alt="${data.title}" loading="lazy">
-      <hr class="card-divider">
-      <div class="card-footer">
-        <strong class="card-title">${data.title}</strong>
-        <p class="card-url">${data.url.replace(/^https?:\/\/(www\.)?/,'').split('/')[0]}</p>
-        ${data.notes ? `<div class="card-notes">${data.notes}</div>` : ''}
-        ${data.tags ? `<div class="card-tags">${data.tags.split(',').map(t => `<span>${t.trim()}</span>`).join(' ')}</div>` : ''}
+      <div class="card-clickable" data-bookmark-index="${index}">
+        <img class="card-thumbnail" src="${thumbnailUrl}" alt="${data.title}" loading="lazy">
+        <hr class="card-divider">
+        <div class="card-footer">
+          <strong class="card-title">${data.title}</strong>
+          <p class="card-url">${data.url.replace(/^https?:\/\/(www\.)?/,'').split('/')[0]}</p>
+          ${data.notes ? `<div class="card-notes">${data.notes}</div>` : ''}
+          ${data.tags ? `<div class="card-tags">${data.tags.split(',').map(t => `<span>${t.trim()}</span>`).join(' ')}</div>` : ''}
+        </div>
       </div>
     </div>
   `;
@@ -313,6 +315,108 @@ function filterBookmarksByCategory(category) {
   }
 }
 
+// Open edit modal with bookmark data
+function openEditModal(bookmarkIndex) {
+  const bookmark = bookmarks[bookmarkIndex];
+  if (!bookmark) return;
+  
+  // Fill the edit form with current data
+  const form = document.getElementById('edit-bookmark-form');
+  form.querySelector('[name="title"]').value = bookmark.title;
+  form.querySelector('[name="url"]').value = bookmark.url;
+  form.querySelector('[name="notes"]').value = bookmark.notes || '';
+  form.querySelector('[name="tags"]').value = bookmark.tags || '';
+  
+  // Store the bookmark index in the form
+  form.setAttribute('data-bookmark-index', bookmarkIndex);
+  
+  // Show the modal
+  document.querySelector('.modal-overlay').classList.add('active');
+  document.getElementById('edit-modal').classList.add('active');
+}
+
+// Update bookmark function
+function updateBookmark(bookmarkIndex, newData) {
+  if (bookmarkIndex < 0 || bookmarkIndex >= bookmarks.length) return;
+  
+  // Update the bookmark in the array
+  bookmarks[bookmarkIndex] = {
+    ...bookmarks[bookmarkIndex],
+    ...newData
+  };
+  
+  // Save to localStorage
+  localStorage.setItem('cure8_curated_content', JSON.stringify(bookmarks));
+  
+  // Update the specific card in the DOM instead of re-rendering all
+  updateCardInDOM(bookmarkIndex, bookmarks[bookmarkIndex]);
+  
+  console.log(`Bookmark ${bookmarkIndex} updated:`, bookmarks[bookmarkIndex]);
+}
+
+// Update a specific card in the DOM
+function updateCardInDOM(bookmarkIndex, bookmarkData) {
+  const gridElement = document.querySelector('.bookmarks-grid');
+  if (!gridElement) return;
+  
+  // Find the existing card by bookmark index
+  const existingCard = gridElement.querySelector(`[data-bookmark-index="${bookmarkIndex}"]`);
+  if (!existingCard) return;
+  
+  // Update the card's data-tags attribute
+  existingCard.setAttribute('data-tags', bookmarkData.tags || '');
+  
+  // Update the card content
+  const cardTitle = existingCard.querySelector('.card-title');
+  const cardUrl = existingCard.querySelector('.card-url');
+  const cardNotes = existingCard.querySelector('.card-notes');
+  const cardTags = existingCard.querySelector('.card-tags');
+  
+  if (cardTitle) cardTitle.textContent = bookmarkData.title;
+  if (cardUrl) cardUrl.textContent = bookmarkData.url.replace(/^https?:\/\/(www\.)?/,'').split('/')[0];
+  
+  // Update notes
+  if (bookmarkData.notes) {
+    if (cardNotes) {
+      cardNotes.textContent = bookmarkData.notes;
+    } else {
+      const cardFooter = existingCard.querySelector('.card-footer');
+      if (cardFooter) {
+        const notesDiv = document.createElement('div');
+        notesDiv.className = 'card-notes';
+        notesDiv.textContent = bookmarkData.notes;
+        cardFooter.appendChild(notesDiv);
+      }
+    }
+  } else if (cardNotes) {
+    cardNotes.remove();
+  }
+  
+  // Update tags
+  if (bookmarkData.tags) {
+    const tagsArray = bookmarkData.tags.split(',').map(tag => tag.trim());
+    if (cardTags) {
+      cardTags.innerHTML = tagsArray.map(tag => `<span>${tag}</span>`).join(' ');
+    } else {
+      const cardFooter = existingCard.querySelector('.card-footer');
+      if (cardFooter) {
+        const tagsDiv = document.createElement('div');
+        tagsDiv.className = 'card-tags';
+        tagsDiv.innerHTML = tagsArray.map(tag => `<span>${tag}</span>`).join(' ');
+        cardFooter.appendChild(tagsDiv);
+      }
+    }
+  } else if (cardTags) {
+    cardTags.remove();
+  }
+  
+  // Refresh the grid layout
+  if (window.muuriGrid) {
+    window.muuriGrid.refreshItems();
+    window.muuriGrid.layout();
+  }
+}
+
 // Modal functionality
 document.addEventListener('DOMContentLoaded', function() {
   // Modal close buttons
@@ -379,6 +483,55 @@ document.addEventListener('DOMContentLoaded', function() {
       
       console.log('Modal closed, card should be visible');
     }, 200);
+  });
+  
+  // Edit bookmark functionality
+  document.addEventListener('click', function(e) {
+    // Check if a card was clicked (but not the delete button)
+    if (e.target.closest('.card-clickable')) {
+      const cardClickable = e.target.closest('.card-clickable');
+      const bookmarkIndex = parseInt(cardClickable.getAttribute('data-bookmark-index'));
+      
+      // Don't open edit modal if delete button was clicked
+      if (e.target.classList.contains('delete-btn')) {
+        return;
+      }
+      
+      // Open edit modal with current bookmark data
+      openEditModal(bookmarkIndex);
+    }
+  });
+  
+  // Edit bookmark form submission
+  document.getElementById('edit-bookmark-form').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const form = e.target;
+    const formData = new FormData(form);
+    const title = formData.get('title');
+    const url = formData.get('url');
+    const notes = formData.get('notes');
+    const tags = formData.get('tags');
+    
+    // Get the bookmark index from the form
+    const bookmarkIndex = parseInt(form.getAttribute('data-bookmark-index'));
+    
+    if (!title || !url) {
+      alert('Please fill in title and URL');
+      return;
+    }
+    
+    console.log('Edit form submitted');
+    console.log('Form data:', { title, url, notes, tags, bookmarkIndex });
+    
+    // Update the bookmark
+    updateBookmark(bookmarkIndex, { title, url, notes, tags });
+    
+    // Close modal
+    document.querySelector('.modal-overlay').classList.remove('active');
+    document.getElementById('edit-modal').classList.remove('active');
+    
+    console.log('Edit modal closed');
   });
   
   // Search functionality

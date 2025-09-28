@@ -92,6 +92,19 @@
       <button type="submit">Save</button>
     </form>
   </div>
+  
+  <!-- Edit bookmark modal -->
+  <div class="modal" id="edit-modal">
+    <button class="modal-close">&times;</button>
+    <h2>Edit Content</h2>
+    <form id="edit-bookmark-form">
+      <input type="text" placeholder="Title" name="title" autocomplete="off"/>
+      <input type="url" placeholder="URL" name="url" required autocomplete="off"/>
+      <input type="text" placeholder="Tags (comma separated)" name="tags"/>
+      <textarea placeholder="Notes" name="notes"></textarea>
+      <button type="submit">Update</button>
+    </form>
+  </div>
   <script src="https://cdn.jsdelivr.net/npm/muuri@0.9.5/dist/muuri.min.js"></script>
   <script src="app.js"></script>
 </body>
