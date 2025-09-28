@@ -13,14 +13,10 @@ export function AppShell({ sidebar, children }) {
 
       {/* Top Bar Content */}
       <header className="absolute left-64 top-0 right-3 h-16 px-6 py-4 z-20">
-        <div className="flex items-center justify-between gap-4 h-full">
+        <div className="flex items-center justify-center h-full">
           {/* Centered Omnibox */}
-          <div className="flex-1 max-w-2xl">
+          <div className="w-full max-w-2xl">
             <OmniBox />
-          </div>
-
-          <div className="flex items-center gap-2">
-            <span className="text-text-secondary text-sm">Username</span>
           </div>
         </div>
       </header>
