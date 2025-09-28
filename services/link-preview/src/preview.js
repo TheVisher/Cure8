@@ -22,7 +22,11 @@ export async function previewForUrl(url) {
 
 async function getOG(url) {
   try {
-    const { result } = await ogs({ url, timeout: { request: 10000, download: 10000 }, onlyGetOpenGraphInfo: false });
+    const { result } = await ogs({ 
+      url, 
+      timeout: 10000,
+      onlyGetOpenGraphInfo: false 
+    });
     // open-graph-scraper returns images as array or object; normalize:
     let img = null;
     if (result.ogImage) {
