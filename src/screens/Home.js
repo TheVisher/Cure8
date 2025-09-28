@@ -16,40 +16,70 @@ export default function HomeScreen({
 }) {
   const hasBookmarks = totalItems > 0;
 
+  const quickActions = [
+    {
+      id: "quick-add",
+      label: "New Capture",
+      description: "Paste a link to save instantly",
+      cta: "Paste link",
+      onClick: onQuickAdd
+    },
+    {
+      id: "quick-import",
+      label: "Import Library",
+      description: "Bring in bookmarks from a JSON export",
+      cta: "Import file",
+      onClick: onImport
+    },
+    {
+      id: "quick-settings",
+      label: "Tune Experience",
+      description: "Adjust previews, thumbnails, and storage",
+      cta: "Open settings",
+      onClick: onOpenSettings
+    }
+  ];
+
   return (
     <div className="space-y-8">
       <section className="home-hero">
-        <div>
+        <div className="home-hero-content">
           <p className="home-eyebrow">Welcome back to Cure8</p>
           <h1 className="home-title">Curate what matters most today.</h1>
           <p className="home-subtitle">
             Save fresh inspiration, surface trusted resources, and keep your health knowledge within reach.
+            Launch your day with quick captures, confident context, and a single hub for the links that matter.
           </p>
           <div className="home-actions">
             <button type="button" className="home-action primary" onClick={onQuickAdd}>
               Paste a link
             </button>
-            <button type="button" className="home-action" onClick={onImport}>
-              Import bookmarks
-            </button>
-            <button type="button" className="home-action subtle" onClick={onOpenSettings}>
-              Settings
+            <button type="button" className="home-action" onClick={onGoToLibrary}>
+              Browse library
             </button>
           </div>
         </div>
         <div className="home-hero-card">
-          <span className="home-hero-label">At a glance</span>
+          <span className="home-hero-label">Today&apos;s snapshot</span>
           <div className="home-hero-metric">
             <strong>{totalItems}</strong>
             <span>items saved</span>
           </div>
-          <p>
-            {readyItems} ready · {pendingItems} fetching · {errorItems} need attention
-          </p>
+          <div className="home-hero-stats">
+            <span><span className="dot dot-ready" aria-hidden="true"></span>{readyItems} ready</span>
+            <span><span className="dot dot-pending" aria-hidden="true"></span>{pendingItems} fetching</span>
+            <span><span className="dot dot-error" aria-hidden="true"></span>{errorItems} need attention</span>
+          </div>
           <button type="button" onClick={onGoToLibrary} className="home-hero-link">
             Open library ↗
           </button>
         </div>
+      </section>
+
+      <section className="home-quick-actions">
+        {quickActions.map(action => (
+          <ActionCard key={action.id} {...action} />
+        ))}
       </section>
 
       <section>
@@ -71,14 +101,15 @@ export default function HomeScreen({
           </div>
           <div className="home-recent-grid">
             {recentItems.map(item => (
-              <Card
-                key={item.id}
-                title={item.title}
-                domain={item.domain}
-                image={showThumbnails ? item.image : undefined}
-                state={item.state}
-                onClick={() => onSelectBookmark(item)}
-              />
+              <div key={item.id} className="home-recent-card">
+                <Card
+                  title={item.title}
+                  domain={item.domain}
+                  image={showThumbnails ? item.image : undefined}
+                  state={item.state}
+                  onClick={() => onSelectBookmark(item)}
+                />
+              </div>
             ))}
           </div>
         </section>
@@ -108,5 +139,17 @@ function StatCard({ value, label, tone = "neutral" }) {
       <span className="home-stat-value">{value}</span>
       <span className="home-stat-label">{label}</span>
     </div>
+  );
+}
+
+function ActionCard({ label, description, cta, onClick }) {
+  return (
+    <button type="button" className="home-action-card" onClick={onClick}>
+      <div className="home-action-card-body">
+        <span className="home-action-card-label">{label}</span>
+        <span className="home-action-card-description">{description}</span>
+      </div>
+      <span className="home-action-card-cta">{cta}</span>
+    </button>
   );
 }
