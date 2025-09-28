@@ -3,6 +3,7 @@ import { AppShell } from "../components/AppShell.js";
 import { Sidebar } from "../components/Sidebar.js";
 import { Card } from "../components/Card.js";
 import SettingsScreen from "./Settings.js";
+import HomeScreen from "./Home.js";
 
 const STORAGE_KEY = "cure8.bookmarks";
 const SETTINGS_KEY = "cure8.settings";
@@ -55,7 +56,7 @@ const buildPreviewRequestUrl = (template, targetUrl) => {
 };
 
 export default function GridScreen() {
-  const [activeView, setActiveView] = React.useState("All");
+  const [activeView, setActiveView] = React.useState("Home");
   const [q, setQ] = React.useState("");
   const [items, setItems] = React.useState(() => {
     if (typeof window === "undefined") return [];
@@ -245,6 +246,15 @@ export default function GridScreen() {
     }
   };
 
+  const focusOmnibox = React.useCallback(() => {
+    if (typeof document === "undefined") return;
+    const input = document.querySelector('input[placeholder="Paste a URL to add, or type to search…"]');
+    if (input) {
+      input.focus();
+      input.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+  }, []);
+
   const categoryId = CATEGORY_IDS.has(activeView) ? activeView : "All";
 
   const filtered = items.filter(it => {
@@ -269,6 +279,27 @@ export default function GridScreen() {
         onImport={handleImport}
         onClearData={handleClearData}
         itemCount={items.length}
+      />
+    );
+  } else if (activeView === "Home") {
+    const pendingCount = items.filter(it => it.state === "pending").length;
+    const errorCount = items.filter(it => it.state === "error").length;
+    const okCount = items.length - pendingCount - errorCount;
+    const recentItems = items.slice(0, 6);
+
+    content = (
+      <HomeScreen
+        totalItems={items.length}
+        readyItems={okCount}
+        pendingItems={pendingCount}
+        errorItems={errorCount}
+        recentItems={recentItems}
+        onQuickAdd={focusOmnibox}
+        onImport={handleImport}
+        onOpenSettings={() => setActiveView("settings")}
+        onGoToLibrary={() => setActiveView("All")}
+        onSelectBookmark={handleCardClick}
+        showThumbnails={settings.showThumbnails}
       />
     );
   } else if (activeView === "help") {

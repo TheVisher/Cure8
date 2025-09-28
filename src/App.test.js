@@ -3,6 +3,6 @@ import App from "./App";
 
 test("renders Cure8 workspace", () => {
   render(<App />);
-  expect(screen.getByText(/cure8/i)).toBeInTheDocument();
+  expect(screen.getByRole("heading", { name: /curate what matters most today/i })).toBeInTheDocument();
   expect(screen.getByPlaceholderText(/paste a url to add/i)).toBeInTheDocument();
 });
