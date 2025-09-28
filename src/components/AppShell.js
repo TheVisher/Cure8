@@ -25,6 +25,12 @@ export function AppShell({ sidebar, children }) {
         </div>
       </header>
 
+      {/* Right Padding */}
+      <div className="absolute right-0 top-0 w-3 h-full z-20 bg-surface"></div>
+
+      {/* Bottom Padding */}
+      <div className="absolute left-0 bottom-0 right-0 h-3 z-20 bg-surface"></div>
+
       {/* Main Content Area with inset background */}
       <main className="absolute left-64 top-16 right-3 bottom-3 p-2 z-10">
         {/* Inset background for the content area */}
