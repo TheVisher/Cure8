@@ -1,0 +1,20 @@
+{
+  "name": "link-preview-service",
+  "private": true,
+  "type": "module",
+  "version": "0.1.0",
+  "scripts": {
+    "dev": "node server.js",
+    "start": "NODE_ENV=production node server.js",
+    "clean:cache": "node -e \"import('fs').then(fs=>fs.rmSync('./cache',{recursive:true,force:true}))\""
+  },
+  "dependencies": {
+    "cheerio": "^1.0.0",
+    "express": "^4.19.2",
+    "murmurhash-js": "^1.0.0",
+    "open-graph-scraper": "^6.6.2",
+    "p-limit": "^5.0.0",
+    "puppeteer": "^23.6.0",
+    "sharp": "^0.33.4"
+  }
+}
