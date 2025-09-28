@@ -19,14 +19,24 @@ function getBrowser() {
 export async function renderCard({ meta, width = 1200, height = 630, format = 'webp' }) {
   const browser = await getBrowser();
   const page = await browser.newPage();
-  await page.setViewport({ width, height, deviceScaleFactor: 2 });
+  
+  // Use movie poster dimensions for movies (2:3 aspect ratio)
+  let finalWidth = width;
+  let finalHeight = height;
+  
+  if (meta.isMovie) {
+    // Movie poster aspect ratio (2:3) - make it taller
+    finalHeight = Math.round(finalWidth * 1.5); // 2:3 ratio
+  }
+  
+  await page.setViewport({ width: finalWidth, height: finalHeight, deviceScaleFactor: 2 });
 
-  const html = template(meta, width, height);
+  const html = template(meta, finalWidth, finalHeight);
   await page.setContent(html, { waitUntil: ['load', 'networkidle0'], timeout: NAV_TIMEOUT });
   const buf = await page.screenshot({ type: 'png' });
 
   // Convert/resize via sharp (keeps output deterministic)
-  const img = sharp(buf).resize(width, height, { fit: 'cover' });
+  const img = sharp(buf).resize(finalWidth, finalHeight, { fit: 'cover' });
   return format === 'png' ? await img.png().toBuffer() : await img.webp({ quality: 92 }).toBuffer();
 }
 
@@ -37,7 +47,13 @@ function template(meta, width, height) {
   const hero = meta.heroImage ? `background-image: url('${meta.heroImage}');` : '';
   const favicon = meta.favicon ? `<img src="${meta.favicon}" alt="" style="width:22px;height:22px;border-radius:4px;margin-right:8px;object-fit:cover;">` : '';
 
-  // Minimal MyMind-like: hero bg, gradient overlay, title+domain chip
+  // Movie poster styling vs regular card styling
+  const isMovie = meta.isMovie;
+  const titleSize = isMovie ? '42px' : '48px';
+  const descSize = isMovie ? '18px' : '22px';
+  const contentPadding = isMovie ? '32px' : '48px';
+  const bottomPadding = isMovie ? '28px' : '42px';
+
   return `
 <!doctype html>
 <html>
@@ -61,15 +77,15 @@ function template(meta, width, height) {
     background: linear-gradient(180deg, rgba(0,0,0,0.1) 0%, rgba(8,8,12,0.65) 70%, rgba(8,8,12,0.9) 100%);
   }
   .content {
-    position:absolute; left:48px; right:48px; bottom:42px; color:#f8fafc;
+    position:absolute; left:${contentPadding}; right:${contentPadding}; bottom:${bottomPadding}; color:#f8fafc;
     text-shadow: 0 1px 2px rgba(0,0,0,0.35);
   }
   .title {
-    font-size: 48px; line-height:1.1; font-weight: 700; letter-spacing: -0.02em; margin:0 0 10px 0;
+    font-size: ${titleSize}; line-height:1.1; font-weight: 700; letter-spacing: -0.02em; margin:0 0 10px 0;
     max-height: 2.2em; overflow: hidden;
   }
   .desc {
-    font-size: 22px; color:#e5e7eb; opacity:.85; margin:0 0 18px 0;
+    font-size: ${descSize}; color:#e5e7eb; opacity:.85; margin:0 0 18px 0;
     max-height: 3.0em; overflow:hidden;
   }
   .chip {

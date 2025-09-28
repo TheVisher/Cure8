@@ -10,13 +10,26 @@ export async function previewForUrl(url) {
   let hero = og.ogImage?.url || og.twitterImage || null;
   if (!hero) hero = await findLargestImage(url, og.html);
 
+  // Special handling for IMDb URLs - extract movie title
+  let title = og.ogTitle || og.twitterTitle || base.title || base.domain;
+  let isMovie = false;
+  
+  if (url.includes('imdb.com/title/')) {
+    isMovie = true;
+    // Try to extract movie title from the page title
+    if (base.title && !base.title.toLowerCase().includes('imdb')) {
+      title = base.title.replace(/\s*\([^)]*\)\s*$/, '').trim(); // Remove year in parentheses
+    }
+  }
+
   return {
     url: base.url,
     domain: base.domain,
-    title: og.ogTitle || og.twitterTitle || base.title || base.domain,
+    title: title,
     description: og.ogDescription || og.twitterDescription || base.description || '',
     favicon: base.favicon,
-    heroImage: hero
+    heroImage: hero,
+    isMovie: isMovie
   };
 }
 

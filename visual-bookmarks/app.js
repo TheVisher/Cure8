@@ -222,12 +222,15 @@ async function fetchThumbnailInBackground(bookmark, index) {
   }
 }
 
-// Fetch thumbnail from local Link Preview service
+// Fetch thumbnail and metadata from local Link Preview service
 async function fetchMicrolinkThumbnail(url) {
   try {
     // First try to get metadata from our local service
     const metadataResponse = await fetch(`http://localhost:8787/preview?url=${encodeURIComponent(url)}`);
     const metadata = await metadataResponse.json();
+    
+    // Store metadata for later use (for auto-populating titles)
+    window.lastPreviewMetadata = metadata;
     
     if (metadata.heroImage) {
       return metadata.heroImage;
@@ -523,6 +526,33 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('add-modal').classList.add('active');
   });
   
+  // Auto-populate title from URL
+  async function autoPopulateTitle(url) {
+    if (!url) return;
+    
+    try {
+      const metadataResponse = await fetch(`http://localhost:8787/preview?url=${encodeURIComponent(url)}`);
+      const metadata = await metadataResponse.json();
+      
+      if (metadata.title && metadata.title !== metadata.domain) {
+        const titleInput = document.querySelector('#add-bookmark-form input[name="title"]');
+        if (titleInput && !titleInput.value) {
+          titleInput.value = metadata.title;
+        }
+      }
+    } catch (error) {
+      console.log('Auto-populate title failed:', error);
+    }
+  }
+
+  // Auto-populate title when URL is entered
+  const urlInput = document.querySelector('#add-bookmark-form input[name="url"]');
+  if (urlInput) {
+    urlInput.addEventListener('blur', function() {
+      autoPopulateTitle(this.value);
+    });
+  }
+
   // Form submission
   document.getElementById('add-bookmark-form').addEventListener('submit', function(e) {
     e.preventDefault();
