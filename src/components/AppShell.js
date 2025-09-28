@@ -1,0 +1,81 @@
+import React from "react";
+
+export function AppShell({ sidebar, children }) {
+  return (
+    <div className="min-h-screen text-text-primary bg-surface">
+      {/* Sidebar Content */}
+      <aside className="absolute left-0 top-0 w-64 h-full p-4">
+        <div className="h-full flex flex-col">
+          <div className="font-bold text-xl text-accent-purple mb-6">Cure8</div>
+          {sidebar}
+        </div>
+      </aside>
+
+      {/* Top Bar Content */}
+      <header className="absolute left-64 top-0 right-3 h-16 px-6 py-4">
+        <div className="flex items-center justify-between gap-4 h-full">
+          {/* Centered Omnibox */}
+          <div className="flex-1 max-w-2xl">
+            <OmniBox />
+          </div>
+
+          <div className="flex items-center gap-2">
+            <span className="text-text-secondary text-sm">Username</span>
+          </div>
+        </div>
+      </header>
+
+      {/* Main Content Area with inset background */}
+      <main className="absolute left-64 top-16 right-3 bottom-3 p-2">
+        {/* Inset background for the content area */}
+        <div className="absolute inset-0 bg-background rounded-xl">
+          {/* Content with padding */}
+          <div className="p-6 h-full">
+            {children}
+          </div>
+        </div>
+      </main>
+    </div>
+  );
+}
+
+/** Omnibox: paste a URL to add, or type to search */
+function OmniBox() {
+  const [q, setQ] = React.useState("");
+
+  const isUrl = React.useMemo(() => {
+    try { const u = new URL(q.trim()); return /^https?:/.test(u.protocol); } catch { return /^https?:\/\//i.test(q.trim()); }
+  }, [q]);
+
+  // Debounced search
+  React.useEffect(() => {
+    if (!isUrl && q.trim()) {
+      const t = setTimeout(() => window.dispatchEvent(new CustomEvent("cure8.search", { detail: { q } })), 200);
+      return () => clearTimeout(t);
+    }
+  }, [q, isUrl]);
+
+  const submit = () => {
+    if (isUrl) {
+      window.dispatchEvent(new CustomEvent("cure8.add-url", { detail: { url: q.trim() } }));
+      setQ("");
+    } else {
+      window.dispatchEvent(new CustomEvent("cure8.search", { detail: { q } }));
+    }
+  };
+
+  return (
+    <div className="relative">
+      <input
+        className="w-full rounded-[0.8rem] bg-background/90 border border-accent-purple/60 focus:border-accent-purple focus:ring-2 focus:ring-accent-purple/40 px-4 py-2 text-sm placeholder:text-text-muted"
+        placeholder="Paste a URL to add, or type to search…"
+        value={q}
+        onChange={(e) => setQ(e.target.value)}
+        onKeyDown={(e) => { if (e.key === "Enter") submit(); if (e.key === "Escape") setQ(""); }}
+      />
+      <div className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs text-text-muted">
+        {isUrl ? "Add link ↵" : "Search ↵"}
+      </div>
+    </div>
+  );
+}

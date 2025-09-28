@@ -35,9 +35,9 @@ export async function renderCard({ meta, width = 1200, height = 630, format = 'w
   await page.setContent(html, { waitUntil: ['load', 'networkidle0'], timeout: NAV_TIMEOUT });
   const buf = await page.screenshot({ type: 'png' });
 
-  // Convert/resize via sharp (keeps output deterministic)
-  const img = sharp(buf).resize(finalWidth, finalHeight, { fit: 'cover' });
-  return format === 'png' ? await img.png().toBuffer() : await img.webp({ quality: 92 }).toBuffer();
+      // Convert/resize via sharp (keeps output deterministic)
+      const img = sharp(buf).resize(finalWidth, finalHeight, { fit: 'cover', position: 'attention' });
+      return format === 'png' ? await img.png().toBuffer() : await img.webp({ quality: 92 }).toBuffer();
 }
 
 function template(meta, width, height) {

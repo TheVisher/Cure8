@@ -4,6 +4,7 @@ import { fileURLToPath } from 'url';
 import { previewForUrl, ensureCacheDirs } from './src/preview.js';
 import { renderCard } from './src/render.js';
 import { getCachePaths, withCache, normalizeUrl } from './src/cache.js';
+import { takePageScreenshot } from './src/preview.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -83,6 +84,34 @@ app.get(['/card.png', '/card.webp', '/card'], async (req, res) => {
   } catch (err) {
     console.error('card error', err);
     res.status(500).send('Card render failed');
+  }
+});
+
+/**
+ * Screenshot endpoint:
+ * GET /screenshot.png?url=...&w=1200&h=800
+ */
+app.get('/screenshot.png', async (req, res) => {
+  try {
+    const url = req.query.url;
+    if (!url) return res.status(400).send('Missing url');
+
+    const width = Number(req.query.w || 1200);
+    const height = Number(req.query.h || 800);
+    const norm = normalizeUrl(url);
+
+    // Cache screenshots by URL and dimensions
+    const key = `screenshot|${norm}|${width}|${height}`;
+    const buf = await withCache(key, 'img', async () => {
+      console.log(`Taking screenshot of: ${url}`);
+      return await takePageScreenshot(url);
+    });
+
+    res.set('Cache-Control', 'public, max-age=86400');
+    res.type('image/png').send(buf);
+  } catch (err) {
+    console.error('screenshot error', err);
+    res.status(500).send('Screenshot failed');
   }
 });
 

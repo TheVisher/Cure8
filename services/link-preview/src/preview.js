@@ -1,6 +1,7 @@
 import ogs from 'open-graph-scraper';
 import * as cheerio from 'cheerio';
 import { URL } from 'url';
+import puppeteer from 'puppeteer';
 
 export async function previewForUrl(url) {
   const og = await getOG(url);
@@ -119,4 +120,35 @@ function resolveUrl(base, maybeRelative) {
 
 export function ensureCacheDirs() {
   // no-op; handled in cache.js via server import
+}
+
+let browserPromise;
+function getBrowser() {
+  if (!browserPromise) {
+    browserPromise = puppeteer.launch({
+      headless: true,
+      args: ['--no-sandbox', '--disable-setuid-sandbox'],
+      executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || undefined
+    });
+  }
+  return browserPromise;
+}
+
+export async function takePageScreenshot(url, width = 1200, height = 800) {
+  const browser = await getBrowser();
+  const page = await browser.newPage();
+  
+  try {
+    await page.setViewport({ width, height, deviceScaleFactor: 1 });
+    await page.goto(url, { waitUntil: 'networkidle0', timeout: 30000 });
+    
+    const screenshot = await page.screenshot({ 
+      type: 'png',
+      fullPage: false 
+    });
+    
+    return screenshot;
+  } finally {
+    await page.close();
+  }
 }
