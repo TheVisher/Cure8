@@ -56,8 +56,9 @@ function updateBookmarkIndices() {
 // Create a card element for Muuri
 function createCardElement(data, index) {
   const item = document.createElement('div');
-  item.className = 'item';
+  item.className = 'item bookmark-card';
   item.dataset.bookmarkIndex = index;
+  item.setAttribute('data-tags', data.tags || '');
   
   // Use cached thumbnail or favicon
   const thumbnailUrl = data.thumbnailUrl || `https://www.google.com/s2/favicons?sz=128&domain_url=${data.url}`;
@@ -267,6 +268,51 @@ function hideUndoButton() {
   }
 }
 
+// Filter bookmarks by category
+function filterBookmarksByCategory(category) {
+  console.log('Filtering by category:', category);
+  
+  const gridElement = document.querySelector('.bookmarks-grid');
+  if (!gridElement) return;
+  
+  // Get all bookmark cards
+  const cards = gridElement.querySelectorAll('.bookmark-card');
+  
+  cards.forEach(card => {
+    const cardTags = card.getAttribute('data-tags') || '';
+    const tagsArray = cardTags.split(',').map(tag => tag.trim().toLowerCase());
+    
+    let shouldShow = false;
+    
+    if (category === 'all') {
+      shouldShow = true;
+    } else if (category === 'work') {
+      // Show if any work-related tags are present
+      shouldShow = tagsArray.some(tag => 
+        tag.includes('work') || tag.includes('business') || tag.includes('professional')
+      );
+    } else if (category === 'personal') {
+      // Show if any personal-related tags are present
+      shouldShow = tagsArray.some(tag => 
+        tag.includes('personal') || tag.includes('life') || tag.includes('hobby')
+      );
+    }
+    
+    // Show or hide the card
+    if (shouldShow) {
+      card.style.display = 'block';
+    } else {
+      card.style.display = 'none';
+    }
+  });
+  
+  // Refresh grid layout if muuri is available
+  if (window.muuriGrid) {
+    window.muuriGrid.refreshItems();
+    window.muuriGrid.layout();
+  }
+}
+
 // Modal functionality
 document.addEventListener('DOMContentLoaded', function() {
   // Modal close buttons
@@ -373,12 +419,18 @@ document.addEventListener('DOMContentLoaded', function() {
       // Add active class to clicked button
       this.classList.add('active');
       
-      // Filter logic would go here
-      // For now, just refresh the grid
-      if (muuriGrid) {
-        muuriGrid.refreshItems();
-        muuriGrid.layout();
+      // Get the category from data attribute
+      const category = this.getAttribute('data-category');
+      
+      // Handle special case for "Add Category"
+      if (category === 'add') {
+        // You can add logic here to show a modal or form to add new categories
+        console.log('Add Category clicked');
+        return;
       }
+      
+      // Filter bookmarks by category
+      filterBookmarksByCategory(category);
     });
   });
   
