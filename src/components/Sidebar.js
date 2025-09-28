@@ -21,7 +21,7 @@ export function Sidebar({ active = "Home", onChange, onExport, onImport }) {
     <div className="flex flex-col h-full">
       {/* Main Navigation */}
       <div className="flex-1">
-        <div className="space-y-1 mt-24">
+        <div className="space-y-1 mt-48">
               {navigationItems.map(item => (
                 <button
                   key={item.id}
