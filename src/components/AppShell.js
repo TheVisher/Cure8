@@ -2,17 +2,17 @@ import React from "react";
 
 export function AppShell({ sidebar, children }) {
   return (
-    <div className="min-h-screen text-text-primary bg-surface">
+    <div className="h-screen text-text-primary bg-surface overflow-hidden">
       {/* Sidebar Content */}
-      <aside className="absolute left-0 top-0 w-64 h-full p-4">
-        <div className="h-full flex flex-col">
+      <aside className="absolute left-0 top-0 w-64 h-screen z-10">
+        <div className="h-full flex flex-col p-4">
           <div className="font-bold text-xl text-accent-purple mb-6">Cure8</div>
           {sidebar}
         </div>
       </aside>
 
       {/* Top Bar Content */}
-      <header className="absolute left-64 top-0 right-3 h-16 px-6 py-4">
+      <header className="absolute left-64 top-0 right-3 h-16 px-6 py-4 z-20">
         <div className="flex items-center justify-between gap-4 h-full">
           {/* Centered Omnibox */}
           <div className="flex-1 max-w-2xl">
@@ -26,11 +26,11 @@ export function AppShell({ sidebar, children }) {
       </header>
 
       {/* Main Content Area with inset background */}
-      <main className="absolute left-64 top-16 right-3 bottom-3 p-2">
+      <main className="absolute left-64 top-16 right-3 bottom-3 p-2 z-10">
         {/* Inset background for the content area */}
         <div className="absolute inset-0 bg-background rounded-xl">
-          {/* Content with padding */}
-          <div className="p-6 h-full">
+          {/* Scrollable content area */}
+          <div className="h-full overflow-y-auto p-6">
             {children}
           </div>
         </div>
