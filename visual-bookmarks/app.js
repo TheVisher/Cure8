@@ -240,6 +240,75 @@ async function fetchThumbnailInBackground(bookmark, index) {
   }
 }
 
+// Generate thumbnails for existing cards that don't have proper ones
+async function generateThumbnailsForExistingCards() {
+  console.log('Checking for existing cards that need thumbnails...');
+  
+  for (let i = 0; i < bookmarks.length; i++) {
+    const bookmark = bookmarks[i];
+    
+    // Check if this bookmark needs a proper thumbnail
+    const needsThumbnail = !bookmark.thumbnailUrl || 
+                          bookmark.thumbnailUrl.includes('google.com/s2/favicons') ||
+                          bookmark.thumbnailUrl.includes('data:image/svg') ||
+                          bookmark.thumbnailUrl.includes('favicon');
+    
+    if (needsThumbnail) {
+      console.log(`Generating thumbnail for: ${bookmark.title}`);
+      
+      // Add a small delay between requests to avoid overwhelming the service
+      await new Promise(resolve => setTimeout(resolve, i * 500));
+      
+      try {
+        const imageUrl = await fetchMicrolinkThumbnail(bookmark.url);
+        if (imageUrl && !imageUrl.includes('google.com/s2/favicons')) {
+          bookmark.thumbnailUrl = imageUrl;
+          saveBookmarkOrder();
+          
+          // Update the image in the DOM
+          const items = document.querySelectorAll('.bookmark-card');
+          if (items[i]) {
+            const img = items[i].querySelector('.card-thumbnail');
+            if (img) {
+              img.src = imageUrl;
+            }
+          }
+          
+          console.log(`✅ Generated thumbnail for: ${bookmark.title}`);
+        }
+      } catch (error) {
+        console.log(`❌ Failed to generate thumbnail for: ${bookmark.title}`, error);
+      }
+    }
+  }
+  
+  console.log('Finished generating thumbnails for existing cards');
+}
+
+// Manual function to regenerate all thumbnails (can be called from console)
+function regenerateAllThumbnails() {
+  console.log('🔄 Regenerating all thumbnails...');
+  
+  // Clear all existing thumbnail URLs to force regeneration
+  bookmarks.forEach(bookmark => {
+    delete bookmark.thumbnailUrl;
+  });
+  
+  // Save the changes
+  saveBookmarkOrder();
+  
+  // Re-render cards with favicons
+  renderAllCards();
+  
+  // Start generating new thumbnails
+  setTimeout(() => {
+    generateThumbnailsForExistingCards();
+  }, 1000);
+}
+
+// Make regenerateAllThumbnails available globally for debugging
+window.regenerateAllThumbnails = regenerateAllThumbnails;
+
 // Fetch thumbnail and metadata from local Link Preview service
 async function fetchMicrolinkThumbnail(url) {
   try {
@@ -774,6 +843,9 @@ document.addEventListener('DOMContentLoaded', function() {
   // Small delay to ensure DOM is fully ready
   setTimeout(() => {
     renderAllCards();
+    
+    // Generate thumbnails for existing cards that don't have proper ones
+    generateThumbnailsForExistingCards();
   }, 100);
   
   // Handle window resize
