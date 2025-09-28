@@ -209,7 +209,7 @@ async function fetchThumbnailInBackground(bookmark, index) {
       saveBookmarkOrder();
       
       // Update the image in the DOM
-      const items = document.querySelectorAll('.muuri-item');
+      const items = document.querySelectorAll('.bookmark-card');
       if (items[index]) {
         const img = items[index].querySelector('.card-thumbnail');
         if (img) {
@@ -222,11 +222,46 @@ async function fetchThumbnailInBackground(bookmark, index) {
   }
 }
 
-// Fetch thumbnail from Microlink API
+// Fetch thumbnail from local Link Preview service
 async function fetchMicrolinkThumbnail(url) {
-  const response = await fetch(`https://api.microlink.io/?url=${encodeURIComponent(url)}`);
-  const data = await response.json();
-  return data.data?.image?.url;
+  try {
+    // First try to get metadata from our local service
+    const metadataResponse = await fetch(`http://localhost:8787/preview?url=${encodeURIComponent(url)}`);
+    const metadata = await metadataResponse.json();
+    
+    if (metadata.heroImage) {
+      return metadata.heroImage;
+    }
+    
+    // If no hero image, generate a card thumbnail
+    const cardResponse = await fetch(`http://localhost:8787/card.webp?url=${encodeURIComponent(url)}&w=400&h=300&format=webp`);
+    if (cardResponse.ok) {
+      // Convert blob to data URL for immediate use
+      const blob = await cardResponse.blob();
+      return new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.readAsDataURL(blob);
+      });
+    }
+    
+    // Fallback to Microlink if local service fails
+    console.log('Local service failed, falling back to Microlink');
+    const microlinkResponse = await fetch(`https://api.microlink.io/?url=${encodeURIComponent(url)}`);
+    const microlinkData = await microlinkResponse.json();
+    return microlinkData.data?.image?.url;
+  } catch (error) {
+    console.log('Local service error:', error);
+    // Fallback to Microlink
+    try {
+      const microlinkResponse = await fetch(`https://api.microlink.io/?url=${encodeURIComponent(url)}`);
+      const microlinkData = await microlinkResponse.json();
+      return microlinkData.data?.image?.url;
+    } catch (fallbackError) {
+      console.log('Microlink fallback also failed:', fallbackError);
+      return null;
+    }
+  }
 }
 
 // Show undo button
