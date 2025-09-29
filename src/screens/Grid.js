@@ -210,16 +210,31 @@ export default function GridScreen() {
       const raw = window.localStorage.getItem(STORAGE_KEY);
       if (!raw) return [];
       const parsed = JSON.parse(raw);
-      return Array.isArray(parsed)
-        ? parsed.map(it => ({
-            ...it,
-            description: it.description || '',
-            notes: it.notes || '',
-            state: it.state || 'ok',
-            createdAt: it.createdAt || Date.now()
-          }))
-        : [];
-    } catch {
+      if (!Array.isArray(parsed)) return [];
+      const baseTime = Date.now();
+      let backfilled = 0;
+      const normalized = parsed.map((it, index) => {
+        const createdAt = typeof it.createdAt === "number" ? it.createdAt : baseTime - index;
+        if (createdAt !== it.createdAt) backfilled += 1;
+        return {
+          ...it,
+          description: it.description || '',
+          notes: it.notes || '',
+          state: it.state || 'ok',
+          createdAt
+        };
+      });
+      if (backfilled > 0) {
+        try {
+          window.localStorage.setItem(STORAGE_KEY, JSON.stringify(normalized));
+          console.log(`[cure8] backfilled createdAt for ${backfilled} bookmark${backfilled === 1 ? '' : 's'}.`);
+        } catch (error) {
+          console.error("Failed to persist backfilled bookmarks", error);
+        }
+      }
+      return normalized;
+    } catch (error) {
+      console.error("Failed to read bookmarks from storage", error);
       return [];
     }
   });
@@ -450,17 +465,39 @@ export default function GridScreen() {
     }
   }, []);
 
+  const sortedByRecency = React.useMemo(() => {
+    return [...items].sort((a, b) => {
+      const aTime = typeof a.createdAt === "number" ? a.createdAt : 0;
+      const bTime = typeof b.createdAt === "number" ? b.createdAt : 0;
+      return bTime - aTime;
+    });
+  }, [items]);
+
   const categoryId = CATEGORY_IDS.has(activeView) ? activeView : "All";
 
-  const filtered = items.filter(it => {
-    const t = (it.title || "").toLowerCase();
-    const d = (it.domain || "").toLowerCase();
-    const s = q.toLowerCase();
-    const matchesSearch = !s || t.includes(s) || d.includes(s);
-    if (!matchesSearch) return false;
-    if (categoryId === "All" || categoryId === "Home") return true;
-    return (it.category || "").toLowerCase() === categoryId.toLowerCase();
-  });
+  const filtered = React.useMemo(() => {
+    const search = q.toLowerCase();
+    const matchesSearch = (item) => {
+      const title = (item.title || "").toLowerCase();
+      const domain = (item.domain || "").toLowerCase();
+      return !search || title.includes(search) || domain.includes(search);
+    };
+
+    if (categoryId === "Recent") {
+      return sortedByRecency
+        .filter(matchesSearch)
+        .filter(it => typeof it.createdAt === "number")
+        .slice(0, 50);
+    }
+
+    const baseMatches = sortedByRecency.filter(matchesSearch);
+    if (categoryId === "All" || categoryId === "Home" || !categoryId) {
+      return baseMatches;
+    }
+
+    const targetCategory = categoryId.toLowerCase();
+    return baseMatches.filter(it => (it.category || "").toLowerCase() === targetCategory);
+  }, [sortedByRecency, q, categoryId]);
 
   let content;
   if (activeView === "settings") {
@@ -480,7 +517,7 @@ export default function GridScreen() {
     const pendingCount = items.filter(it => it.state === "pending").length;
     const errorCount = items.filter(it => it.state === "error").length;
     const okCount = items.length - pendingCount - errorCount;
-    const recentItems = items.slice(0, 6);
+    const recentItems = sortedByRecency.slice(0, 6);
 
     content = (
       <HomeScreen
@@ -558,6 +595,12 @@ export default function GridScreen() {
                 url={it.url}
               />
             ))}
+          </div>
+        )}
+
+        {categoryId === "Recent" && filtered.length === 0 && (
+          <div className="mt-6 text-sm text-text-secondary">
+            No recent items yet - save something!
           </div>
         )}
 

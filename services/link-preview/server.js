@@ -83,16 +83,16 @@ app.get(['/card.png', '/card.webp', '/card'], async (req, res) => {
     res.set('Cache-Control', 'public, max-age=86400');
     res.type(format === 'webp' ? 'image/webp' : 'image/png').send(buf);
   } catch (err) {
-    console.error('card error', err);
-    res.status(500).send('Card render failed');
+    console.error('card render failed', err);
+    res.status(502).json({ error: 'render_failed' });
   }
 });
 
 /**
  * Screenshot endpoint:
- * GET /screenshot.png?url=...&w=1200&h=800
+ * GET /screenshot.jpg?url=...&w=1200&h=800 (legacy /screenshot.png supported)
  */
-app.get('/screenshot.png', async (req, res) => {
+app.get(['/screenshot.jpg', '/screenshot.jpeg', '/screenshot.png'], async (req, res) => {
   try {
     const url = req.query.url;
     if (!url) return res.status(400).send('Missing url');
@@ -105,14 +105,14 @@ app.get('/screenshot.png', async (req, res) => {
     const key = `screenshot|${norm}|${width}|${height}`;
     const buf = await withCache(key, 'img', async () => {
       console.log(`Taking screenshot of: ${url}`);
-      return await takePageScreenshot(url);
+      return await takePageScreenshot(url, width, height);
     });
 
     res.set('Cache-Control', 'public, max-age=86400');
-    res.type('image/png').send(buf);
+    res.type('image/jpeg').send(buf);
   } catch (err) {
-    console.error('screenshot error', err);
-    res.status(500).send('Screenshot failed');
+    console.error('screenshot capture failed', err);
+    res.status(502).json({ error: 'screenshot_failed' });
   }
 });
 
