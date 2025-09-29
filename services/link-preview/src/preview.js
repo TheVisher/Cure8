@@ -3,6 +3,7 @@ import * as cheerio from 'cheerio';
 import { URL } from 'url';
 import { Buffer } from 'buffer';
 import puppeteer from 'puppeteer';
+import { withPage } from './lib/withPage.js';
 
 export async function previewForUrl(url) {
   const og = await getOG(url);
@@ -17,7 +18,7 @@ export async function previewForUrl(url) {
       if (buffer) {
         const base64 = Buffer.isBuffer(buffer) ? buffer.toString('base64') : null;
         if (base64) {
-          hero = `data:image/png;base64,${base64}`;
+          hero = `data:image/jpeg;base64,${base64}`;
         }
       }
     } catch (error) {
@@ -326,34 +327,28 @@ function getBrowser() {
 
 export async function takePageScreenshot(url, width = 1200, height = 800) {
   const browser = await getBrowser();
-  const page = await browser.newPage();
-  
-  try {
+  return await withPage(browser, async (page) => {
+    page.setDefaultTimeout(15000);
+    page.setDefaultNavigationTimeout(15000);
     await page.setViewport({ width, height, deviceScaleFactor: 1 });
-    await page.goto(url, { waitUntil: 'networkidle0', timeout: 30000 });
-    
-    const screenshot = await page.screenshot({ 
+    await page.goto(url, { waitUntil: 'networkidle0' });
+    return await page.screenshot({
       type: 'jpeg',
       quality: 80,
-      fullPage: false 
+      fullPage: false
     });
-    
-    return screenshot;
-  } finally {
-    await page.close();
-  }
+  });
 }
-
 async function captureTikTokMetadata(url) {
   const browser = await getBrowser();
-  const page = await browser.newPage();
-
-  try {
+  return await withPage(browser, async (page) => {
+    page.setDefaultTimeout(15000);
+    page.setDefaultNavigationTimeout(15000);
     await page.setViewport({ width: 840, height: 1480, deviceScaleFactor: 1 });
     await page.setUserAgent(
       'Mozilla/5.0 (iPhone; CPU iPhone OS 16_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.0 Mobile/15E148 Safari/604.1'
     );
-    await page.goto(url, { waitUntil: 'networkidle2', timeout: 30000 });
+    await page.goto(url, { waitUntil: 'networkidle2' });
     await page.waitForTimeout(1500);
 
     let title = await page.evaluate(() => {
@@ -381,12 +376,11 @@ async function captureTikTokMetadata(url) {
     }
 
     if (!image) {
-      const fallback = await page.screenshot({ type: 'jpeg', quality: 70, encoding: 'base64', fullPage: false });
+      const fallback = await page.screenshot({ type: 'jpeg', quality: 80, encoding: 'base64', fullPage: false });
       image = fallback ? `data:image/jpeg;base64,${fallback}` : null;
     }
 
     return { title, description, image };
-  } finally {
-    try { await page.close(); } catch {}
-  }
+  });
 }
+

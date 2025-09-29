@@ -1,0 +1,9 @@
+{
+  "functions": {
+    "api/**": {
+      "runtime": "nodejs20.x",
+      "regions": ["sfo1"]
+    }
+  },
+  "regions": ["sfo1"]
+}

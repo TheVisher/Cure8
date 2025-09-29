@@ -1,5 +1,6 @@
 import puppeteer from 'puppeteer';
 import sharp from 'sharp';
+import { withPage } from './lib/withPage.js';
 
 const NAV_TIMEOUT = Number(process.env.NAVIGATION_TIMEOUT_MS || 20000);
 const CONCURRENCY = Number(process.env.RENDER_CONCURRENCY || 2);
@@ -18,26 +19,30 @@ function getBrowser() {
 
 export async function renderCard({ meta, width = 1200, height = 630, format = 'webp' }) {
   const browser = await getBrowser();
-  const page = await browser.newPage();
-  
+
   // Use movie poster dimensions for movies (2:3 aspect ratio)
   let finalWidth = width;
   let finalHeight = height;
-  
+
   if (meta.isMovie) {
     // Movie poster aspect ratio (2:3) - make it taller
     finalHeight = Math.round(finalWidth * 1.5); // 2:3 ratio
   }
-  
-  await page.setViewport({ width: finalWidth, height: finalHeight, deviceScaleFactor: 2 });
 
-  const html = template(meta, finalWidth, finalHeight);
-  await page.setContent(html, { waitUntil: ['load', 'networkidle0'], timeout: NAV_TIMEOUT });
-  const buf = await page.screenshot({ type: 'png' });
+  const screenshot = await withPage(browser, async (page) => {
+    page.setDefaultTimeout(15000);
+    page.setDefaultNavigationTimeout(15000);
+    await page.setViewport({ width: finalWidth, height: finalHeight, deviceScaleFactor: 2 });
 
-      // Convert/resize via sharp (keeps output deterministic)
-      const img = sharp(buf).resize(finalWidth, finalHeight, { fit: 'cover', position: 'attention' });
-      return format === 'png' ? await img.png().toBuffer() : await img.webp({ quality: 92 }).toBuffer();
+    const html = template(meta, finalWidth, finalHeight);
+    await page.setContent(html, { waitUntil: ['load', 'networkidle0'], timeout: NAV_TIMEOUT });
+
+    return await page.screenshot({ type: 'jpeg', quality: 80 });
+  });
+
+  // Convert/resize via sharp (keeps output deterministic)
+  const img = sharp(screenshot).resize(finalWidth, finalHeight, { fit: 'cover', position: 'attention' });
+  return format === 'png' ? await img.png().toBuffer() : await img.webp({ quality: 92 }).toBuffer();
 }
 
 function template(meta, width, height) {
