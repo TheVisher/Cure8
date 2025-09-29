@@ -585,14 +585,227 @@ html, body, #root {
 .bookmark-list-item:hover .bookmark-list-open {
   color: rgba(196, 181, 253, 0.95);
 }
-.bookmark-card-list-actions {
-  margin-left: auto;
-  font-size: 1.05rem;
-  color: rgba(196, 181, 253, 0.8);
-  padding-right: 0.4rem;
-  pointer-events: none;
+
+.settings-card {
+  background: linear-gradient(180deg, rgba(17, 16, 28, 0.92), rgba(10, 9, 22, 0.9));
+  border: 1px solid rgba(124, 58, 237, 0.18);
+  border-radius: 1.2rem;
+  padding: 1.8rem;
+  box-shadow: 0 24px 48px rgba(76, 29, 149, 0.22);
 }
 
+.settings-card + .settings-card {
+  margin-top: 1.5rem;
+}
+
+.settings-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+}
+
+.settings-card-title {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #f9fafb;
+  margin: 0;
+}
+
+.settings-card-subtitle {
+  margin-top: 0.35rem;
+  color: rgba(209, 213, 219, 0.75);
+  font-size: 0.9rem;
+}
+
+.settings-ghost-btn {
+  border: 1px solid rgba(124, 58, 237, 0.4);
+  color: rgba(196, 181, 253, 0.85);
+  background: rgba(124, 58, 237, 0.1);
+  border-radius: 9999px;
+  padding: 0.4rem 1.1rem;
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: border-color 0.2s ease, color 0.2s ease, background 0.2s ease;
+}
+
+.settings-ghost-btn:hover {
+  border-color: rgba(147, 51, 234, 0.8);
+  color: #f9f5ff;
+  background: rgba(147, 51, 234, 0.18);
+}
+
+.settings-toggle-list {
+  margin-top: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.settings-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.85rem 1rem;
+  border-radius: 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.03);
+  transition: border-color 0.2s ease, background 0.2s ease;
+}
+
+.settings-toggle:hover {
+  border-color: rgba(124, 58, 237, 0.45);
+  background: rgba(124, 58, 237, 0.08);
+}
+
+.settings-toggle-label {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #f9fafb;
+}
+
+.settings-toggle-description {
+  display: block;
+  margin-top: 0.25rem;
+  font-size: 0.75rem;
+  color: rgba(209, 213, 219, 0.7);
+}
+
+.settings-toggle-input {
+  width: 20px;
+  height: 20px;
+}
+
+.settings-field-group {
+  margin-top: 1.4rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.settings-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: rgba(209, 213, 219, 0.8);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.settings-input {
+  width: 100%;
+  border-radius: 0.85rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(12, 11, 24, 0.85);
+  padding: 0.65rem 0.9rem;
+  font-size: 0.85rem;
+  color: #f9fafb;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.settings-input:focus {
+  outline: none;
+  border-color: rgba(124, 58, 237, 0.6);
+  box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.25);
+}
+
+.settings-hint {
+  font-size: 0.7rem;
+  color: rgba(156, 163, 175, 0.7);
+}
+
+.settings-hint-strong {
+  color: rgba(209, 213, 219, 0.9);
+}
+
+.settings-actions {
+  margin-top: 1.4rem;
+  display: grid;
+  gap: 0.9rem;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+}
+
+.settings-pill-btn {
+  border-radius: 9999px;
+  border: 1px solid transparent;
+  padding: 0.55rem 1.1rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  background: linear-gradient(110deg, #7C3AED, #9333EA);
+  color: #ffffff;
+  cursor: pointer;
+  transition: transform 0.2s ease, filter 0.2s ease;
+}
+
+.settings-pill-btn:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.05);
+}
+
+.settings-pill-btn--ghost {
+  background: rgba(11, 10, 24, 0.9);
+  border-color: rgba(124, 58, 237, 0.4);
+  color: rgba(229, 231, 235, 0.85);
+}
+
+.settings-pill-btn--ghost:hover {
+  color: #f9f5ff;
+  border-color: rgba(147, 51, 234, 0.75);
+}
+
+.settings-danger {
+  margin-top: 1.8rem;
+  border-radius: 1rem;
+  border: 1px solid rgba(248, 113, 113, 0.35);
+  background: rgba(127, 29, 29, 0.2);
+  padding: 1rem 1.25rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.settings-danger-title {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #fca5a5;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin: 0;
+}
+
+.settings-danger-copy {
+  margin: 0.35rem 0 0;
+  font-size: 0.75rem;
+  color: rgba(254, 226, 226, 0.75);
+}
+
+.settings-danger-btn {
+  border-radius: 9999px;
+  padding: 0.55rem 1.2rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  background: linear-gradient(120deg, #ef4444, #dc2626);
+  color: #fff;
+  border: none;
+  cursor: pointer;
+  transition: transform 0.2s ease, filter 0.2s ease;
+}
+
+.settings-danger-btn:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.05);
+}
+
+.settings-code {
+  background: rgba(255, 255, 255, 0.09);
+  padding: 0.25rem 0.45rem;
+  border-radius: 0.5rem;
+  font-size: 0.75rem;
+}
 .bookmark-card-frame,
 .bookmark-card-glow {
   pointer-events: none;
@@ -634,6 +847,155 @@ html, body, #root {
   opacity: 0.9;
 }
 
+.app-shell {
+  position: fixed;
+  inset: 0;
+  background: #12121A;
+  color: #f9fafb;
+}
+
+.app-sidebar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 16rem;
+  height: 100%;
+  z-index: 30;
+}
+
+.app-sidebar-inner {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  padding: 1rem;
+}
+
+.app-logo {
+  font-weight: 700;
+  font-size: 1.75rem;
+  color: #8b5cf6;
+  margin: 1rem 0 2rem;
+}
+
+.app-header {
+  position: absolute;
+  top: 0;
+  left: 16rem;
+  right: 1.2rem;
+  height: 92px;
+  padding: 22px 36px;
+  z-index: 25;
+}
+
+.app-header-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+}
+
+.app-header-search {
+  width: 100%;
+  max-width: 720px;
+}
+
+.app-header-badge {
+  padding: 0.35rem 1rem;
+  border-radius: 9999px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.06);
+  font-size: 0.65rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(229, 231, 235, 0.8);
+}
+
+.app-main {
+  position: absolute;
+  top: 92px;
+  left: 16rem;
+  right: 1.2rem;
+  bottom: 1rem;
+  padding: 0.5rem;
+  z-index: 10;
+}
+
+.app-main-surface {
+  position: absolute;
+  inset: 0;
+  background: #0b0b0f;
+  border-radius: 1.2rem;
+  overflow: hidden;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.04);
+}
+
+.app-main-scroll {
+  height: 100%;
+  overflow-y: auto;
+  padding: 1.5rem 1.5rem 3rem;
+}
+
+.omni-root {
+  position: relative;
+}
+
+
+.omni-shadow {
+  position: relative;
+}
+
+.omni-container {
+  position: relative;
+  background: rgba(12, 10, 24, 0.92);
+  border: 1px solid rgba(124, 58, 237, 0.45);
+  border-radius: 9999px;
+  padding: 0.35rem 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  box-shadow:
+    0 0 40px rgba(124, 58, 237, 0.38),
+    inset 0 0 20px rgba(124, 58, 237, 0.15);
+}
+
+.omni-input {
+  flex: 1;
+  border: none;
+  background: transparent;
+  color: #f9fafb;
+  font-size: 0.9rem;
+  padding: 0.35rem 0;
+}
+
+.omni-input:focus {
+  outline: none;
+}
+
+.omni-hint {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: rgba(209, 213, 219, 0.65);
+}
+
+.omni-glow {
+  position: absolute;
+  inset: -14px;
+  border-radius: 9999px;
+  background: radial-gradient(circle at 20% 20%, rgba(124, 58, 237, 0.52), transparent 55%),
+              radial-gradient(circle at 80% 0%, rgba(59, 130, 246, 0.4), transparent 60%);
+  filter: blur(18px);
+  opacity: 0.85;
+  z-index: -1;
+}
+
+.omni-container:focus-within {
+  border-color: rgba(147, 51, 234, 0.75);
+  box-shadow:
+    0 0 55px rgba(147, 51, 234, 0.45),
+    inset 0 0 22px rgba(147, 51, 234, 0.18);
+}
+
 .layout-toolbar {
   display: flex;
   align-items: center;
@@ -663,7 +1025,7 @@ html, body, #root {
   color: rgba(229, 231, 235, 0.7);
   font-size: 0.8rem;
   font-weight: 600;
-  padding: 0.35rem 0.9rem;
+  padding: 0.55rem 1.1rem;
   border-radius: 9999px;
   cursor: pointer;
   transition: background 0.2s ease, color 0.2s ease;
