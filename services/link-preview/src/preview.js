@@ -25,10 +25,17 @@ export async function previewForUrl(url) {
   }
 
   if (isAmazonUrl(url)) {
-    const amazon = parseAmazonMetadata(url, og.html);
+    const amazon = await parseAmazonMetadata(url, og.html);
     if (amazon.title) title = amazon.title;
     if (amazon.description) description = amazon.description;
     if (!hero && amazon.image) hero = amazon.image;
+  }
+
+  if (isTikTokUrl(url)) {
+    const tiktok = await parseTikTokMetadata(url, og.html);
+    if (tiktok.title) title = tiktok.title;
+    if (tiktok.description) description = tiktok.description;
+    if (!hero && tiktok.image) hero = tiktok.image;
   }
 
   return {
@@ -52,7 +59,7 @@ function isAmazonUrl(url) {
   }
 }
 
-function parseAmazonMetadata(url, htmlMaybe) {
+async function parseAmazonMetadata(url, htmlMaybe) {
   if (!htmlMaybe) return {};
   const $ = cheerio.load(htmlMaybe);
 
@@ -117,6 +124,46 @@ function parseAmazonMetadata(url, htmlMaybe) {
     description,
     image: primaryImage ? resolveUrl(url, primaryImage) : null
   };
+}
+
+function isTikTokUrl(url) {
+  try {
+    const { hostname } = new URL(url);
+    return /tiktok\.com$/i.test(hostname) || /tiktok\.com/i.test(hostname);
+  } catch {
+    return false;
+  }
+}
+
+async function parseTikTokMetadata(url, htmlMaybe) {
+  let title = '';
+  let description = '';
+  let image = null;
+
+  if (htmlMaybe) {
+    try {
+      const $ = cheerio.load(htmlMaybe);
+      title = $('meta[property="og:title"]').attr('content')?.trim() || $('title').text().trim() || '';
+      description = $('meta[property="og:description"]').attr('content')?.trim() || description;
+      image = $('meta[property="og:image"]').attr('content')?.trim() || image;
+    } catch {}
+  }
+
+  if (title && image) {
+    return { title, description, image };
+  }
+
+  try {
+    const enriched = await captureTikTokMetadata(url);
+    return {
+      title: title || enriched.title || '',
+      description: description || enriched.description || '',
+      image: image || enriched.image || null
+    };
+  } catch (error) {
+    console.error('TikTok metadata enrichment failed:', error.message);
+    return { title, description, image };
+  }
 }
 
 async function getOG(url) {
@@ -239,5 +286,52 @@ export async function takePageScreenshot(url, width = 1200, height = 800) {
     return screenshot;
   } finally {
     await page.close();
+  }
+}
+
+async function captureTikTokMetadata(url) {
+  const browser = await getBrowser();
+  const page = await browser.newPage();
+
+  try {
+    await page.setViewport({ width: 840, height: 1480, deviceScaleFactor: 1 });
+    await page.setUserAgent(
+      'Mozilla/5.0 (iPhone; CPU iPhone OS 16_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.0 Mobile/15E148 Safari/604.1'
+    );
+    await page.goto(url, { waitUntil: 'networkidle2', timeout: 30000 });
+    await page.waitForTimeout(1500);
+
+    let title = await page.evaluate(() => {
+      const primary = document.querySelector('h1[data-e2e="browse-video-desc"], h1[data-e2e="video-desc"]');
+      if (primary?.textContent) return primary.textContent.trim();
+      const meta = document.querySelector('meta[property="og:title"], meta[name="title"]');
+      if (meta?.getAttribute('content')) return meta.getAttribute('content').trim();
+      return document.title.replace(/\s*-\s*TikTok.*$/i, '').trim();
+    });
+
+    const description = await page.evaluate(() => {
+      const meta = document.querySelector('meta[property="og:description"], meta[name="description"]');
+      return meta?.getAttribute('content')?.trim() || '';
+    });
+
+    let image = null;
+    const videoHandle = await page.$('video');
+    if (videoHandle) {
+      try {
+        const screenshot = await videoHandle.screenshot({ type: 'jpeg', quality: 80, encoding: 'base64' });
+        if (screenshot) image = `data:image/jpeg;base64,${screenshot}`;
+      } catch (err) {
+        console.warn('TikTok video screenshot failed, falling back to viewport capture:', err.message);
+      }
+    }
+
+    if (!image) {
+      const fallback = await page.screenshot({ type: 'jpeg', quality: 70, encoding: 'base64', fullPage: false });
+      image = fallback ? `data:image/jpeg;base64,${fallback}` : null;
+    }
+
+    return { title, description, image };
+  } finally {
+    try { await page.close(); } catch {}
   }
 }

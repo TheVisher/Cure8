@@ -1,8 +1,25 @@
 import React from "react";
 
+function safeHost(link) {
+  if (!link) return "";
+  try {
+    return new URL(link).hostname.replace(/^www\./, "");
+  } catch {
+    return "";
+  }
+}
+
 export function Card({ title, domain, image, state = "ok", onClick, layout = "grid", url }) {
   const showSkeleton = state === "pending";
   const showBrand = !image && state !== "pending";
+
+  const displayTitle = title?.trim() || url || domain || "Untitled";
+  const displayDomain = domain || safeHost(url) || "";
+  const displayUrl = url || "";
+  const placeholderText = (displayDomain || displayTitle || "link")
+    .replace(/^https?:\/\//, "")
+    .slice(0, 2)
+    .toUpperCase();
 
   const statusLabel =
     state === "pending" ? "Fetching" : state === "error" ? "Needs attention" : "Ready";
@@ -14,14 +31,6 @@ export function Card({ title, domain, image, state = "ok", onClick, layout = "gr
       : "bookmark-list-status bookmark-list-status--ok";
 
   if (layout === "list") {
-    const displayTitle = title || domain || "Untitled";
-    const displayDomain = domain || "—";
-    const displayUrl = url || "";
-    const placeholderText = (domain || displayTitle || "link")
-      .replace(/^https?:\/\//, "")
-      .slice(0, 2)
-      .toUpperCase();
-
     return (
       <div className="bookmark-list-item" onClick={onClick} role="button">
         <div className="bookmark-list-thumb">
@@ -96,7 +105,7 @@ export function Card({ title, domain, image, state = "ok", onClick, layout = "gr
   if (isMasonry) placeholderClasses.push("bookmark-card-placeholder--masonry");
   if (isCompact) placeholderClasses.push("bookmark-card-placeholder--compact");
 
-  const placeholderContent = domain || "link";
+  const placeholderContent = displayDomain || placeholderText || "link";
 
   return (
     <div onClick={onClick} className={cardClasses.join(" ")}>
@@ -116,8 +125,8 @@ export function Card({ title, domain, image, state = "ok", onClick, layout = "gr
         </div>
 
         <div className={bodyClasses.join(" ")}>
-          <div className="bookmark-card-title">{title}</div>
-          <div className="bookmark-card-domain">{domain}</div>
+          <div className="bookmark-card-title">{displayTitle}</div>
+          <div className="bookmark-card-domain">{displayDomain}</div>
         </div>
       </div>
     </div>

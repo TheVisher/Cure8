@@ -8,6 +8,110 @@ import HomeScreen from "./Home.js";
 const STORAGE_KEY = "cure8.bookmarks";
 const SETTINGS_KEY = "cure8.settings";
 
+function safeHost(url) {
+  if (!url) return "";
+  try {
+    return new URL(url).hostname.replace(/^www\./, "");
+  } catch {
+    return "";
+  }
+}
+
+function BookmarkModal({ item, onClose, onDelete }) {
+  const [draftNotes, setDraftNotes] = React.useState(item.notes || "");
+  const [isSaving, setIsSaving] = React.useState(false);
+  const displayTitle = item.title?.trim() || item.url || item.domain || "Untitled";
+  const displayDomain = item.domain || safeHost(item.url);
+  const savedAt = item.createdAt ? new Date(item.createdAt) : null;
+
+  const commitNotes = React.useCallback((notes) => {
+    window.dispatchEvent(new CustomEvent("cure8.update", {
+      detail: {
+        id: item.id,
+        patch: { notes }
+      }
+    }));
+  }, [item.id]);
+
+  const handleSave = () => {
+    setIsSaving(true);
+    commitNotes(draftNotes.trim());
+    setTimeout(() => setIsSaving(false), 200);
+  };
+
+  React.useEffect(() => {
+    const listener = (e) => {
+      if (e.detail?.id === item.id && typeof e.detail.patch?.notes === 'string') {
+        setDraftNotes(e.detail.patch.notes);
+      }
+    };
+    window.addEventListener("cure8.updated", listener);
+    return () => window.removeEventListener("cure8.updated", listener);
+  }, [item.id]);
+
+  return (
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+      <div className="bg-surface border border-white/10 rounded-card max-w-2xl w-full mx-4 max-h-[90vh] overflow-hidden">
+        <div className="p-6 border-b border-white/10">
+          <div className="flex items-start justify-between">
+            <div className="flex-1 min-w-0">
+              <h2 className="text-xl font-bold text-text-primary truncate">{displayTitle}</h2>
+              {displayDomain && (
+                <p className="text-sm text-text-muted mt-1">{displayDomain}</p>
+              )}
+              {savedAt && (
+                <p className="text-xs text-text-muted mt-1">
+                  Saved {savedAt.toLocaleDateString()} at {savedAt.toLocaleTimeString()}
+                </p>
+              )}
+            </div>
+            <div className="flex gap-2 ml-4">
+              <button
+                onClick={onDelete}
+                className="px-3 py-1.5 text-xs font-medium text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded transition-colors"
+              >
+                Delete
+              </button>
+              <button
+                onClick={onClose}
+                className="px-3 py-1.5 text-xs font-medium text-text-muted hover:text-text-primary hover:bg-white/5 rounded transition-colors"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+        
+        <div className="p-6">
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-text-secondary mb-2">
+                Notes
+              </label>
+              <textarea
+                value={draftNotes}
+                onChange={(e) => setDraftNotes(e.target.value)}
+                placeholder="Add your thoughts about this bookmark..."
+                className="w-full h-32 px-3 py-2 bg-white/5 border border-white/10 rounded text-text-primary placeholder-text-muted resize-none focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-transparent"
+              />
+            </div>
+            
+            <div className="flex justify-end">
+              <button
+                onClick={handleSave}
+                disabled={isSaving}
+                className="px-4 py-2 bg-purple-600 hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-medium rounded transition-colors"
+              >
+                {isSaving ? "Saving..." : "Save Notes"}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 const defaultSettings = {
   autoFetchMetadata: true,
   showThumbnails: true,
@@ -150,7 +254,9 @@ export default function GridScreen() {
         title: url,
         domain,
         url,
-        state: settings.autoFetchMetadata ? "pending" : "ok"
+        description: '',
+        state: settings.autoFetchMetadata ? "pending" : "ok",
+        createdAt: Date.now()
       }, ...x]);
 
       if (!settings.autoFetchMetadata) {
@@ -170,6 +276,7 @@ export default function GridScreen() {
           domain: meta.domain || it.domain,
           image: meta.cardImage || meta.heroImage || null,
           url: meta.url || it.url || url,
+          description: meta.description || it.description || '',
           state: "ok"
         } : it));
       } catch (error) {
@@ -243,7 +350,9 @@ export default function GridScreen() {
                   domain,
                   url: item.url || null,
                   image: item.image || null,
-                  state: item.state || "ok"
+                  description: item.description || '',
+                  state: item.state || "ok",
+                  createdAt: item.createdAt || Date.now()
                 };
               });
               return [...normalized, ...prev];
@@ -387,70 +496,12 @@ export default function GridScreen() {
           </div>
         )}
 
-        {/* Details Modal */}
         {showDetailsModal && selectedItem && (
-          <div
-            className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
-            onClick={() => setShowDetailsModal(false)}
-          >
-            <div
-              className="bg-surface rounded-card p-6 max-w-md w-full mx-4 border border-white/10"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="flex justify-between items-start mb-4">
-                <h2 className="text-xl font-bold text-text-primary">Bookmark Details</h2>
-                <button
-                  className="text-text-muted hover:text-text-primary text-2xl"
-                  onClick={() => setShowDetailsModal(false)}
-                >
-                  ×
-                </button>
-              </div>
-
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-semibold text-text-secondary mb-1">Title</label>
-                  <p className="text-text-primary">{selectedItem.title}</p>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-semibold text-text-secondary mb-1">URL</label>
-                  <p className="text-text-primary break-all">{selectedItem.url || "N/A"}</p>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-semibold text-text-secondary mb-1">Domain</label>
-                  <p className="text-text-primary">{selectedItem.domain}</p>
-                </div>
-
-                {selectedItem.image && (
-                  <div>
-                    <label className="block text-sm font-semibold text-text-secondary mb-1">Thumbnail</label>
-                    <img src={selectedItem.image} alt="Thumbnail" className="w-full h-32 object-cover rounded" />
-                  </div>
-                )}
-              </div>
-
-              <div className="flex gap-3 mt-6">
-                <button
-                  className="flex-1 bg-accent-purple text-white px-4 py-2 rounded-pill hover:brightness-110 transition"
-                  onClick={() => {
-                    if (selectedItem.url) {
-                      window.open(selectedItem.url, "_blank");
-                    }
-                  }}
-                >
-                  Open Link
-                </button>
-                <button
-                  className="flex-1 bg-red-600 text-white px-4 py-2 rounded-pill hover:brightness-110 transition"
-                  onClick={() => handleDeleteItem(selectedItem.id)}
-                >
-                  Delete
-                </button>
-              </div>
-            </div>
-          </div>
+          <BookmarkModal
+            item={selectedItem}
+            onClose={() => setShowDetailsModal(false)}
+            onDelete={() => handleDeleteItem(selectedItem.id)}
+          />
         )}
       </>
     );
@@ -471,3 +522,4 @@ export default function GridScreen() {
     </AppShell>
   );
 }
+
