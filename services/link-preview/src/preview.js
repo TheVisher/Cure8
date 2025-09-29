@@ -10,6 +10,19 @@ export async function previewForUrl(url) {
   // Pick hero image: OG > Twitter > fallback scan
   let hero = og.ogImage?.url || og.twitterImage || null;
   if (!hero) hero = await findLargestImage(url, og.html);
+  if (!hero) {
+    try {
+      const buffer = await takePageScreenshot(url, 1280, 720);
+      if (buffer) {
+        const base64 = Buffer.isBuffer(buffer) ? buffer.toString('base64') : null;
+        if (base64) {
+          hero = `data:image/png;base64,${base64}`;
+        }
+      }
+    } catch (error) {
+      console.warn('Fallback screenshot failed:', error.message);
+    }
+  }
 
   // Special handling for IMDb URLs - extract movie title
   let title = og.ogTitle || og.twitterTitle || base.title || base.domain;
@@ -279,7 +292,8 @@ export async function takePageScreenshot(url, width = 1200, height = 800) {
     await page.goto(url, { waitUntil: 'networkidle0', timeout: 30000 });
     
     const screenshot = await page.screenshot({ 
-      type: 'png',
+      type: 'jpeg',
+      quality: 80,
       fullPage: false 
     });
     

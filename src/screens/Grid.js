@@ -18,11 +18,25 @@ function safeHost(url) {
 }
 
 function BookmarkModal({ item, onClose, onDelete }) {
-  const [draftNotes, setDraftNotes] = React.useState(item.notes || "");
-  const [isSaving, setIsSaving] = React.useState(false);
   const displayTitle = item.title?.trim() || item.url || item.domain || "Untitled";
   const displayDomain = item.domain || safeHost(item.url);
   const savedAt = item.createdAt ? new Date(item.createdAt) : null;
+  const [draftNotes, setDraftNotes] = React.useState(item.notes || "");
+  const [isSaving, setIsSaving] = React.useState(false);
+
+  React.useEffect(() => {
+    setDraftNotes(item.notes || "");
+  }, [item.id, item.notes]);
+
+  React.useEffect(() => {
+    const listener = (e) => {
+      if (e.detail?.id === item.id && typeof e.detail.patch?.notes === "string") {
+        setDraftNotes(e.detail.patch.notes);
+      }
+    };
+    window.addEventListener("cure8.note", listener);
+    return () => window.removeEventListener("cure8.note", listener);
+  }, [item.id]);
 
   const commitNotes = React.useCallback((notes) => {
     window.dispatchEvent(new CustomEvent("cure8.update", {
@@ -34,79 +48,100 @@ function BookmarkModal({ item, onClose, onDelete }) {
   }, [item.id]);
 
   const handleSave = () => {
+    const trimmed = draftNotes.trim();
+    if ((item.notes || "") === trimmed) return;
     setIsSaving(true);
-    commitNotes(draftNotes.trim());
+    setDraftNotes(trimmed);
+    commitNotes(trimmed);
     setTimeout(() => setIsSaving(false), 200);
   };
 
-  React.useEffect(() => {
-    const listener = (e) => {
-      if (e.detail?.id === item.id && typeof e.detail.patch?.notes === 'string') {
-        setDraftNotes(e.detail.patch.notes);
-      }
-    };
-    window.addEventListener("cure8.updated", listener);
-    return () => window.removeEventListener("cure8.updated", listener);
-  }, [item.id]);
+  const dirty = (item.notes || "") !== draftNotes.trim();
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div className="bg-surface border border-white/10 rounded-card max-w-2xl w-full mx-4 max-h-[90vh] overflow-hidden">
-        <div className="p-6 border-b border-white/10">
-          <div className="flex items-start justify-between">
-            <div className="flex-1 min-w-0">
-              <h2 className="text-xl font-bold text-text-primary truncate">{displayTitle}</h2>
-              {displayDomain && (
-                <p className="text-sm text-text-muted mt-1">{displayDomain}</p>
-              )}
-              {savedAt && (
-                <p className="text-xs text-text-muted mt-1">
-                  Saved {savedAt.toLocaleDateString()} at {savedAt.toLocaleTimeString()}
-                </p>
-              )}
-            </div>
-            <div className="flex gap-2 ml-4">
-              <button
-                onClick={onDelete}
-                className="px-3 py-1.5 text-xs font-medium text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded transition-colors"
-              >
-                Delete
-              </button>
-              <button
-                onClick={onClose}
-                className="px-3 py-1.5 text-xs font-medium text-text-muted hover:text-text-primary hover:bg-white/5 rounded transition-colors"
-              >
-                Close
-              </button>
-            </div>
-          </div>
+    <div className="bookmark-modal-backdrop" onClick={onClose}>
+      <div className="bookmark-modal" onClick={(e) => e.stopPropagation()}>
+        <button className="bookmark-modal-close" onClick={onClose} aria-label="Close details">
+          ×
+        </button>
+
+        <div className="bookmark-modal-media">
+          {item.image ? (
+            <img src={item.image} alt="Preview" />
+          ) : (
+            <div className="bookmark-modal-media-placeholder">{displayDomain || 'link'}</div>
+          )}
         </div>
-        
-        <div className="p-6">
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-text-secondary mb-2">
-                Notes
-              </label>
-              <textarea
-                value={draftNotes}
-                onChange={(e) => setDraftNotes(e.target.value)}
-                placeholder="Add your thoughts about this bookmark..."
-                className="w-full h-32 px-3 py-2 bg-white/5 border border-white/10 rounded text-text-primary placeholder-text-muted resize-none focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-transparent"
-              />
+
+        <aside className="bookmark-modal-meta">
+          <header className="bookmark-modal-header">
+            <h2>{displayTitle}</h2>
+            {displayDomain && <span className="bookmark-modal-domain">{displayDomain}</span>}
+          </header>
+
+          {item.url && (
+            <div className="bookmark-modal-row">
+              <span className="bookmark-modal-label">URL</span>
+              <a className="bookmark-modal-url" href={item.url} target="_blank" rel="noreferrer">
+                {item.url}
+              </a>
             </div>
-            
-            <div className="flex justify-end">
+          )}
+
+          {savedAt && (
+            <div className="bookmark-modal-row">
+              <span className="bookmark-modal-label">Saved</span>
+              <span className="bookmark-modal-value">{savedAt.toLocaleString()}</span>
+            </div>
+          )}
+
+          <div className="bookmark-modal-summary">
+            <span className="bookmark-modal-label">Summary</span>
+            <p>
+              {item.description?.trim() ||
+                "We're working on AI-powered annotations. For now, use notes below to capture a TL;DR."}
+            </p>
+          </div>
+
+          <div className="bookmark-modal-notes">
+            <span className="bookmark-modal-label">Notes</span>
+            <textarea
+              placeholder="Capture quick thoughts…"
+              rows={5}
+              value={draftNotes}
+              onChange={(e) => setDraftNotes(e.target.value)}
+            />
+            <div className="bookmark-modal-note-actions">
+              <div className="bookmark-modal-note-status">
+                {isSaving ? "Saving…" : dirty ? "Unsaved changes" : "Saved"}
+              </div>
               <button
+                type="button"
+                className="bookmark-modal-note-save"
+                disabled={!dirty || isSaving}
                 onClick={handleSave}
-                disabled={isSaving}
-                className="px-4 py-2 bg-purple-600 hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-medium rounded transition-colors"
               >
-                {isSaving ? "Saving..." : "Save Notes"}
+                Save Notes
               </button>
             </div>
           </div>
-        </div>
+
+          <div className="bookmark-modal-actions">
+            <button
+              className="bookmark-modal-action"
+              onClick={() => {
+                if (item.url) {
+                  window.open(item.url, '_blank');
+                }
+              }}
+            >
+              Open Link
+            </button>
+            <button className="bookmark-modal-delete" onClick={onDelete}>
+              Delete
+            </button>
+          </div>
+        </aside>
       </div>
     </div>
   );
@@ -175,7 +210,15 @@ export default function GridScreen() {
       const raw = window.localStorage.getItem(STORAGE_KEY);
       if (!raw) return [];
       const parsed = JSON.parse(raw);
-      return Array.isArray(parsed) ? parsed : [];
+      return Array.isArray(parsed)
+        ? parsed.map(it => ({
+            ...it,
+            description: it.description || '',
+            notes: it.notes || '',
+            state: it.state || 'ok',
+            createdAt: it.createdAt || Date.now()
+          }))
+        : [];
     } catch {
       return [];
     }
@@ -230,6 +273,25 @@ export default function GridScreen() {
   }, [items]);
 
   React.useEffect(() => {
+    const onUpdate = (event) => {
+      const detail = event.detail;
+      if (!detail || !detail.id || !detail.patch) return;
+      persistItems(prev => prev.map(it => it.id === detail.id ? { ...it, ...detail.patch } : it));
+      window.dispatchEvent(new CustomEvent("cure8.note", { detail }));
+    };
+    window.addEventListener("cure8.update", onUpdate);
+    return () => window.removeEventListener("cure8.update", onUpdate);
+  }, [persistItems]);
+
+  React.useEffect(() => {
+    if (!selectedItem) return;
+    const fresh = items.find(it => it.id === selectedItem.id);
+    if (fresh && fresh !== selectedItem) {
+      setSelectedItem(fresh);
+    }
+  }, [items, selectedItem]);
+
+  React.useEffect(() => {
     if (typeof window === "undefined") return;
     try {
       window.localStorage.setItem(LAYOUT_KEY, layoutMode);
@@ -255,6 +317,7 @@ export default function GridScreen() {
         domain,
         url,
         description: '',
+        notes: '',
         state: settings.autoFetchMetadata ? "pending" : "ok",
         createdAt: Date.now()
       }, ...x]);
@@ -277,6 +340,7 @@ export default function GridScreen() {
           image: meta.cardImage || meta.heroImage || null,
           url: meta.url || it.url || url,
           description: meta.description || it.description || '',
+          notes: it.notes || '',
           state: "ok"
         } : it));
       } catch (error) {
@@ -351,6 +415,7 @@ export default function GridScreen() {
                   url: item.url || null,
                   image: item.image || null,
                   description: item.description || '',
+                  notes: item.notes || '',
                   state: item.state || "ok",
                   createdAt: item.createdAt || Date.now()
                 };
@@ -522,4 +587,3 @@ export default function GridScreen() {
     </AppShell>
   );
 }
-
