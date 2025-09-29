@@ -1,6 +1,7 @@
 import ogs from 'open-graph-scraper';
 import * as cheerio from 'cheerio';
 import { URL } from 'url';
+import { Buffer } from 'buffer';
 import puppeteer from 'puppeteer';
 
 export async function previewForUrl(url) {
