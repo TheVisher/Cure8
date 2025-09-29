@@ -123,6 +123,16 @@ async function parseAmazonMetadata(url, htmlMaybe) {
     primaryImage = $('meta[name="twitter:image"]').attr('content') || null;
   }
 
+  if (!primaryImage) {
+    try {
+      const capture = await captureAmazonHero(url);
+      if (capture.image) primaryImage = capture.image;
+      if (capture.title) title = title || capture.title;
+    } catch (err) {
+      console.warn('Amazon hero capture failed:', err.message);
+    }
+  }
+
   const bullets = $('#feature-bullets li span')
     .map((_, el) => $(el).text().trim())
     .get()
@@ -138,6 +148,36 @@ async function parseAmazonMetadata(url, htmlMaybe) {
     description,
     image: primaryImage ? resolveUrl(url, primaryImage) : null
   };
+}
+
+async function captureAmazonHero(url) {
+  const browser = await getBrowser();
+  const page = await browser.newPage();
+
+  try {
+    await page.setViewport({ width: 1280, height: 1200, deviceScaleFactor: 1 });
+    await page.setUserAgent(
+      'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36'
+    );
+    await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 30000 });
+    await page.waitForSelector('#imgTagWrapperId img, img#landingImage', { timeout: 8000 });
+
+    const productTitle = await page.evaluate(() => {
+      const node = document.querySelector('#productTitle');
+      return node?.textContent?.trim() || '';
+    });
+
+    const heroHandle = await page.$('#imgTagWrapperId img, img#landingImage');
+    let image = null;
+    if (heroHandle) {
+      const buffer = await heroHandle.screenshot({ type: 'jpeg', quality: 85, encoding: 'base64' });
+      if (buffer) image = `data:image/jpeg;base64,${buffer}`;
+    }
+
+    return { title: productTitle, image };
+  } finally {
+    try { await page.close(); } catch {}
+  }
 }
 
 function isTikTokUrl(url) {
