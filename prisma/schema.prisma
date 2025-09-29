@@ -1,10 +1,11 @@
-﻿generator client {
+generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")  // pooled 6543 for runtime
+  directUrl = env("DIRECT_URL")    // direct 5432 for migrations
 }
 
 model Card {
@@ -15,11 +16,11 @@ model Card {
   url       String
   image     String?
   notes     String?
-  tags      Tag[]    @relation("TagsOnCards", references: [id])
+  tags      Tag[]    // implicit many-to-many
 }
 
 model Tag {
   id    String @id @default(cuid())
   name  String @unique
-  cards Card[] @relation("TagsOnCards")
+  cards Card[] // implicit many-to-many
 }
