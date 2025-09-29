@@ -1,4 +1,4 @@
-﻿# Deploy & Environment Notes
+# Deploy & Environment Notes
 
 ## Local Development
 1. Copy `.env.example` to `.env.local` and fill `NEXT_PUBLIC_BASE_URL` + `DATABASE_URL`.
@@ -17,6 +17,8 @@ pnpm dlx vercel link
 # Configure environment (set for Preview + Production)
 pnpm dlx vercel env add NEXT_PUBLIC_BASE_URL
 pnpm dlx vercel env add DATABASE_URL
+pnpm dlx vercel env add SENTRY_DSN
+pnpm dlx vercel env add SENTRY_AUTH_TOKEN
 
 # Deploy
 pnpm dlx vercel         # preview
@@ -24,3 +26,5 @@ pnpm dlx vercel deploy --prod
 ```
 
 > The default `pnpm build` now calls `pnpm vercel-build`, which runs `prisma generate`, `prisma migrate deploy`, and finally `next build` to ensure the database schema is in sync before the bundle step.
+>
+> SENTRY_DSN should match the project DSN, and SENTRY_AUTH_TOKEN needs `project:write` and `org:read` scopes so source maps can upload during Vercel builds.
