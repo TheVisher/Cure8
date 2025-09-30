@@ -1,0 +1,919 @@
+'use client';
+
+import React from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Sidebar } from "@/components/Sidebar";
+import { Card } from "@/components/Card";
+import SettingsScreen from "@/screens/Settings";
+import HomeScreen from "@/screens/Home";
+import { useSidebarRegistry } from "@/components/layout/sidebar-registry";
+
+const STORAGE_KEY = "cure8.bookmarks";
+const SETTINGS_KEY = "cure8.settings";
+
+function safeHost(url) {
+  if (!url) return "";
+  try {
+    return new URL(url).hostname.replace(/^www\./, "");
+  } catch {
+    return "";
+  }
+}
+
+const CARDS_API_URL = "/api/cards";
+
+function normalizeServerCard(card) {
+  const createdAt = card.createdAt
+    ? typeof card.createdAt === "number"
+      ? card.createdAt
+      : new Date(card.createdAt).getTime()
+    : Date.now();
+
+  return {
+    id: card.id,
+    title: card.title || card.url || "Untitled",
+    url: card.url || "",
+    domain: card.domain || safeHost(card.url),
+    image: card.image || null,
+    description: card.description || "",
+    notes: card.notes || "",
+    state: card.status || "ok",
+    createdAt,
+  };
+}
+
+function normalizeLegacyItem(item, fallbackTimestamp) {
+  const createdAt = typeof item.createdAt === "number" ? item.createdAt : fallbackTimestamp;
+  return {
+    id: item.id || `legacy_${Math.random().toString(36).slice(2, 10)}`,
+    title: item.title || item.url || "Untitled",
+    url: item.url || "",
+    domain: item.domain || safeHost(item.url),
+    image: item.image || null,
+    description: item.description || "",
+    notes: item.notes || "",
+    state: item.state || "ok",
+    createdAt,
+  };
+}
+
+function toServerPayload(item) {
+  return {
+    title: item.title,
+    url: item.url,
+    image: item.image ?? null,
+    notes: item.notes ?? "",
+    description: item.description ?? "",
+    domain: item.domain ?? safeHost(item.url),
+    status: item.state ?? "ok",
+    metadata: item.metadata ?? null,
+  };
+}
+
+function BookmarkModal({ item, onClose, onDelete }) {
+  const displayTitle = item.title?.trim() || item.url || item.domain || "Untitled";
+  const displayDomain = item.domain || safeHost(item.url);
+  const savedAt = item.createdAt ? new Date(item.createdAt) : null;
+  const [draftNotes, setDraftNotes] = React.useState(item.notes || "");
+  const [isSaving, setIsSaving] = React.useState(false);
+
+  React.useEffect(() => {
+    setDraftNotes(item.notes || "");
+  }, [item.id, item.notes]);
+
+  React.useEffect(() => {
+    const listener = (e) => {
+      if (e.detail?.id === item.id && typeof e.detail.patch?.notes === "string") {
+        setDraftNotes(e.detail.patch.notes);
+      }
+    };
+    window.addEventListener("cure8.note", listener);
+    return () => window.removeEventListener("cure8.note", listener);
+  }, [item.id]);
+
+  const commitNotes = React.useCallback((notes) => {
+    window.dispatchEvent(new CustomEvent("cure8.update", {
+      detail: {
+        id: item.id,
+        patch: { notes }
+      }
+    }));
+  }, [item.id]);
+
+  const handleSave = () => {
+    const trimmed = draftNotes.trim();
+    if ((item.notes || "") === trimmed) return;
+    setIsSaving(true);
+    setDraftNotes(trimmed);
+    commitNotes(trimmed);
+    setTimeout(() => setIsSaving(false), 200);
+  };
+
+  const dirty = (item.notes || "") !== draftNotes.trim();
+
+  return (
+    <div className="bookmark-modal-backdrop" onClick={onClose}>
+      <div className="bookmark-modal" onClick={(e) => e.stopPropagation()}>
+        <button className="bookmark-modal-close" onClick={onClose} aria-label="Close details">
+          ×
+        </button>
+
+        <div className="bookmark-modal-media">
+          {item.image ? (
+            <img src={item.image} alt="Preview" />
+          ) : (
+            <div className="bookmark-modal-media-placeholder">{displayDomain || 'link'}</div>
+          )}
+        </div>
+
+        <aside className="bookmark-modal-meta">
+          <header className="bookmark-modal-header">
+            <h2>{displayTitle}</h2>
+            {displayDomain && <span className="bookmark-modal-domain">{displayDomain}</span>}
+          </header>
+
+          {item.url && (
+            <div className="bookmark-modal-row">
+              <span className="bookmark-modal-label">URL</span>
+              <a className="bookmark-modal-url" href={item.url} target="_blank" rel="noreferrer">
+                {item.url}
+              </a>
+            </div>
+          )}
+
+          {savedAt && (
+            <div className="bookmark-modal-row">
+              <span className="bookmark-modal-label">Saved</span>
+              <span className="bookmark-modal-value">{savedAt.toLocaleString()}</span>
+            </div>
+          )}
+
+          <div className="bookmark-modal-summary">
+            <span className="bookmark-modal-label">Summary</span>
+            <p>
+              {item.description?.trim() ||
+                "We're working on AI-powered annotations. For now, use notes below to capture a TL;DR."}
+            </p>
+          </div>
+
+          <div className="bookmark-modal-notes">
+            <span className="bookmark-modal-label">Notes</span>
+            <textarea
+              placeholder="Capture quick thoughts…"
+              rows={5}
+              value={draftNotes}
+              onChange={(e) => setDraftNotes(e.target.value)}
+            />
+            <div className="bookmark-modal-note-actions">
+              <div className="bookmark-modal-note-status">
+                {isSaving ? "Saving…" : dirty ? "Unsaved changes" : "Saved"}
+              </div>
+              <button
+                type="button"
+                className="bookmark-modal-note-save"
+                disabled={!dirty || isSaving}
+                onClick={handleSave}
+              >
+                Save Notes
+              </button>
+            </div>
+          </div>
+
+          <div className="bookmark-modal-actions">
+            <button
+              className="bookmark-modal-action"
+              onClick={() => {
+                if (item.url) {
+                  window.open(item.url, '_blank');
+                }
+              }}
+            >
+              Open Link
+            </button>
+            <button className="bookmark-modal-delete" onClick={onDelete}>
+              Delete
+            </button>
+          </div>
+        </aside>
+      </div>
+    </div>
+  );
+}
+
+const defaultSettings = {
+  autoFetchMetadata: true,
+  showThumbnails: true,
+  previewServiceUrl: "http://localhost:8787/preview?url={{url}}"
+};
+
+const CATEGORY_IDS = new Set(["Home", "All", "Work", "Personal", "Favorites", "Recent"]);
+const LAYOUT_KEY = "cure8.layout";
+const LAYOUT_OPTIONS = [
+  { id: "grid", label: "Grid" },
+  { id: "masonry", label: "Masonry" },
+  { id: "list", label: "List" },
+  { id: "compact", label: "Compact" }
+];
+
+const randomId = () => {
+  try {
+    if (typeof window !== "undefined" && window.crypto?.randomUUID) {
+      return window.crypto.randomUUID();
+    }
+    if (typeof crypto !== "undefined" && crypto.randomUUID) {
+      return crypto.randomUUID();
+    }
+  } catch {}
+  return `id_${Math.random().toString(36).slice(2, 10)}${Date.now().toString(36)}`;
+};
+
+const readSettingsFromStorage = () => {
+  if (typeof window === "undefined") return { ...defaultSettings };
+  try {
+    const raw = window.localStorage.getItem(SETTINGS_KEY);
+    if (!raw) return { ...defaultSettings };
+    const parsed = JSON.parse(raw);
+    if (parsed && typeof parsed === "object") {
+      return { ...defaultSettings, ...parsed };
+    }
+    return { ...defaultSettings };
+  } catch {
+    return { ...defaultSettings };
+  }
+};
+
+const buildPreviewRequestUrl = (template, targetUrl) => {
+  const safeTemplate = (template || "").trim();
+  const fallback = defaultSettings.previewServiceUrl;
+  const base = safeTemplate || fallback;
+  const encoded = encodeURIComponent(targetUrl);
+  if (base.includes("{{url}}")) {
+    return base.replace(/\{\{url\}\}/g, encoded);
+  }
+  const separator = base.includes("?") ? "&" : "?";
+  return `${base}${separator}url=${encoded}`;
+};
+
+export default function GridScreen() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
+  const [activeView, setActiveView] = React.useState(() => {
+    const param = searchParams?.get("view");
+    return param && typeof param === "string" ? param : "Home";
+  });
+  const [q, setQ] = React.useState(() => searchParams?.get("q") || "");
+  const [items, setItems] = React.useState([]);
+  const [showDetailsModal, setShowDetailsModal] = React.useState(false);
+  const [selectedItem, setSelectedItem] = React.useState(null);
+  const [settings, setSettings] = React.useState(readSettingsFromStorage);
+  const [layoutMode, setLayoutMode] = React.useState(() => {
+    if (typeof window === "undefined") return "grid";
+    const stored = window.localStorage.getItem(LAYOUT_KEY);
+    return LAYOUT_OPTIONS.some(option => option.id === stored) ? stored : "grid";
+  });
+
+  const replaceParams = React.useCallback(
+    (updater) => {
+      const current = searchParams
+        ? new URLSearchParams(searchParams.toString())
+        : new URLSearchParams();
+      updater(current);
+      const queryString = current.toString();
+      router.replace(queryString ? `?${queryString}` : "", { scroll: false });
+    },
+    [router, searchParams]
+  );
+
+  // Sync activeView with URL parameter
+  React.useEffect(() => {
+    const param = searchParams?.get("view");
+    const newView = param && typeof param === "string" ? param : "Home";
+    if (newView !== activeView) {
+      setActiveView(newView);
+    }
+  }, [searchParams, activeView]);
+
+  const handleViewChange = React.useCallback(
+    (view) => {
+      // Update URL first, then state to prevent flashing
+      const newUrl = view === "Home" ? "/" : `/?view=${view}`;
+      router.push(newUrl, { scroll: false });
+      
+      // Update state after a small delay to ensure smooth transition
+      setTimeout(() => {
+        setActiveView(view);
+      }, 0);
+    },
+    [router]
+  );
+
+  const handleLayoutChange = React.useCallback(
+    (mode) => {
+      setLayoutMode(mode);
+      replaceParams((params) => {
+        if (!mode || mode === "grid") {
+          params.delete("layout");
+        } else {
+          params.set("layout", mode);
+        }
+      });
+    },
+    [replaceParams]
+  );
+
+  const updateSettings = React.useCallback((partial) => {
+    setSettings(prev => ({ ...prev, ...partial }));
+  }, []);
+
+  const resetSettings = React.useCallback(() => {
+    setSettings(() => ({ ...defaultSettings }));
+  }, []);
+
+  const createCardOnServer = React.useCallback(async (payload) => {
+    try {
+      const response = await fetch(CARDS_API_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      if (!response.ok) {
+        throw new Error(`Failed with ${response.status}`);
+      }
+      const data = await response.json();
+      if (data && typeof data === "object") {
+        return normalizeServerCard(data);
+      }
+    } catch (error) {
+      console.error("Failed to create card", error);
+    }
+    return null;
+  }, []);
+
+  const updateCardOnServer = React.useCallback(async (id, patch) => {
+    try {
+      const response = await fetch(`${CARDS_API_URL}/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(patch),
+      });
+      if (!response.ok) {
+        throw new Error(`Failed with ${response.status}`);
+      }
+      const data = await response.json();
+      if (data && typeof data === "object") {
+        return normalizeServerCard(data);
+      }
+    } catch (error) {
+      console.error(`Failed to update card ${id}`, error);
+    }
+    return null;
+  }, []);
+
+  const deleteCardOnServer = React.useCallback(async (id) => {
+    try {
+      const response = await fetch(`${CARDS_API_URL}/${id}`, {
+        method: "DELETE",
+      });
+      if (!response.ok) {
+        throw new Error(`Failed with ${response.status}`);
+      }
+    } catch (error) {
+      console.error(`Failed to delete card ${id}`, error);
+    }
+  }, []);
+
+  const clearCardsOnServer = React.useCallback(async () => {
+    try {
+      const response = await fetch(CARDS_API_URL, {
+        method: "DELETE",
+      });
+      if (!response.ok) {
+        throw new Error(`Failed with ${response.status}`);
+      }
+    } catch (error) {
+      console.error("Failed to clear cards", error);
+    }
+  }, []);
+
+  React.useEffect(() => {
+    let cancelled = false;
+
+    const bootstrap = async () => {
+      let serverItems = [];
+
+      try {
+        const response = await fetch(CARDS_API_URL, { cache: "no-store" });
+        if (!response.ok) {
+          throw new Error(`Failed with ${response.status}`);
+        }
+        const data = await response.json();
+        if (Array.isArray(data)) {
+          serverItems = data.map(normalizeServerCard);
+        }
+      } catch (error) {
+        console.error("Failed to load bookmarks from API", error);
+      }
+
+      if (cancelled) return;
+
+      if (serverItems.length > 0) {
+        setItems(serverItems);
+        return;
+      }
+
+      if (typeof window !== "undefined") {
+        let legacyItems = [];
+        try {
+          const raw = window.localStorage.getItem(STORAGE_KEY);
+          if (raw) {
+            const parsed = JSON.parse(raw);
+            if (Array.isArray(parsed)) {
+              const baseTime = Date.now();
+              legacyItems = parsed.map((item, index) =>
+                normalizeLegacyItem(item, baseTime - index)
+              );
+            }
+          }
+        } catch (error) {
+          console.error("Failed to read legacy bookmarks from storage", error);
+        }
+
+        if (!cancelled && legacyItems.length > 0) {
+          setItems(legacyItems);
+          try {
+            await Promise.all(
+              legacyItems.map((item) =>
+                fetch(CARDS_API_URL, {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({
+                    id: item.id,
+                    ...toServerPayload(item),
+                    createdAt: new Date(item.createdAt).toISOString(),
+                  }),
+                })
+              )
+            );
+            window.localStorage.removeItem(STORAGE_KEY);
+          } catch (error) {
+            console.error("Failed to migrate legacy bookmarks", error);
+          }
+          return;
+        }
+      }
+
+      if (!cancelled) {
+        setItems([]);
+      }
+    };
+
+    bootstrap();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  React.useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      window.localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+    } catch (err) {
+      console.error("Failed to persist settings", err);
+    }
+  }, [settings]);
+
+  React.useEffect(() => {
+    const viewParam = searchParams?.get("view");
+    if (viewParam && viewParam !== activeView) {
+      setActiveView(viewParam);
+    }
+    if (!viewParam && activeView !== "Home") {
+      setActiveView("Home");
+    }
+
+    const searchParam = searchParams?.get("q") || "";
+    if (searchParam !== q) {
+      setQ(searchParam);
+    }
+
+    const layoutParam = searchParams?.get("layout");
+    if (
+      layoutParam &&
+      layoutParam !== layoutMode &&
+      LAYOUT_OPTIONS.some(option => option.id === layoutParam)
+    ) {
+      setLayoutMode(layoutParam);
+    }
+  }, [searchParams, activeView, q, layoutMode]);
+
+  React.useEffect(() => {
+    const onUpdate = (event: any) => {
+      const detail = event.detail;
+      if (!detail || !detail.id || !detail.patch) return;
+
+      setItems(prev => prev.map(it => it.id === detail.id ? { ...it, ...detail.patch } : it));
+
+      const patch: any = detail.patch;
+      const serverPatch: any = {};
+
+      if (Object.prototype.hasOwnProperty.call(patch, "title")) {
+        serverPatch.title = patch.title ?? "";
+      }
+      if (Object.prototype.hasOwnProperty.call(patch, "url")) {
+        serverPatch.url = patch.url ?? "";
+        if (!Object.prototype.hasOwnProperty.call(patch, "domain")) {
+          serverPatch.domain = safeHost(patch.url);
+        }
+      }
+      if (Object.prototype.hasOwnProperty.call(patch, "domain")) {
+        serverPatch.domain = patch.domain ?? "";
+      }
+      if (Object.prototype.hasOwnProperty.call(patch, "image")) {
+        serverPatch.image = patch.image ?? null;
+      }
+      if (Object.prototype.hasOwnProperty.call(patch, "description")) {
+        serverPatch.description = patch.description ?? "";
+      }
+      if (Object.prototype.hasOwnProperty.call(patch, "notes")) {
+        serverPatch.notes = patch.notes ?? "";
+      }
+      if (Object.prototype.hasOwnProperty.call(patch, "state")) {
+        serverPatch.status = patch.state ?? "ok";
+      }
+
+      if (Object.keys(serverPatch).length > 0) {
+        updateCardOnServer(detail.id, serverPatch);
+      }
+
+      window.dispatchEvent(new CustomEvent("cure8.note", { detail }));
+    };
+    window.addEventListener("cure8.update", onUpdate);
+    return () => window.removeEventListener("cure8.update", onUpdate);
+  }, [updateCardOnServer]);
+
+  React.useEffect(() => {
+    if (!selectedItem) return;
+    const fresh = items.find(it => it.id === selectedItem.id);
+    if (fresh && fresh !== selectedItem) {
+      setSelectedItem(fresh);
+    }
+  }, [items, selectedItem]);
+
+  React.useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      window.localStorage.setItem(LAYOUT_KEY, layoutMode);
+    } catch (err) {
+      console.error("Failed to persist layout mode", err);
+    }
+  }, [layoutMode]);
+
+  // Listen to omnibox events
+  React.useEffect(() => {
+    const onSearch = (e) => {
+      const value = e.detail.q || "";
+      setQ(value);
+      replaceParams((params) => {
+        if (value) {
+          params.set("q", value);
+        } else {
+          params.delete("q");
+        }
+      });
+    };
+    const onAdd = async (e) => {
+      const url = e.detail.url;
+      const id = randomId();
+      let domain = url;
+      try {
+        domain = new URL(url).hostname.replace(/^www\./, "");
+      } catch {}
+
+      const createdAt = Date.now();
+      const newItem = {
+        id,
+        title: url,
+        domain,
+        url,
+        description: '',
+        notes: '',
+        state: settings.autoFetchMetadata ? "pending" : "ok",
+        image: null,
+        createdAt,
+      };
+
+      setItems((x) => [newItem, ...x]);
+
+      createCardOnServer({
+        id,
+        ...toServerPayload(newItem),
+        createdAt: new Date(createdAt).toISOString(),
+      });
+
+      if (!settings.autoFetchMetadata) {
+        return;
+      }
+
+      try {
+        const requestUrl = buildPreviewRequestUrl(settings.previewServiceUrl, url);
+        const res = await fetch(requestUrl);
+        if (!res.ok) {
+          throw new Error(`Preview service responded with ${res.status}`);
+        }
+        const meta = await res.json();
+        const patch = {
+          title: meta.title || newItem.title,
+          domain: meta.domain || newItem.domain,
+          image: meta.cardImage || meta.heroImage || null,
+          url: meta.url || newItem.url || url,
+          description: meta.description || newItem.description || '',
+          notes: newItem.notes || '',
+          state: "ok",
+        };
+        setItems((x) =>
+          x.map((it) => (it.id === id ? { ...it, ...patch } : it))
+        );
+        updateCardOnServer(id, {
+          ...toServerPayload({ ...newItem, ...patch }),
+          status: "ok",
+        });
+      } catch (error) {
+        console.error("Preview lookup failed", error);
+        setItems((x) =>
+          x.map((it) => (it.id === id ? { ...it, state: "error" } : it))
+        );
+        updateCardOnServer(id, { status: "error" });
+      }
+    };
+    window.addEventListener("cure8.search", onSearch);
+    window.addEventListener("cure8.add-url", onAdd);
+    return () => {
+      window.removeEventListener("cure8.search", onSearch);
+      window.removeEventListener("cure8.add-url", onAdd);
+    };
+  }, [createCardOnServer, replaceParams, settings, updateCardOnServer]);
+
+  React.useEffect(() => {
+    if (activeView !== "settings" && activeView !== "help") return;
+    setShowDetailsModal(false);
+  }, [activeView]);
+
+  const handleCardClick = (item) => {
+    setSelectedItem(item);
+    setShowDetailsModal(true);
+  };
+
+  const handleDeleteItem = (itemId) => {
+    const item = items.find(it => it.id === itemId);
+    if (item && window.confirm(`Are you sure you want to delete "${item.title}"?`)) {
+      setItems(prev => prev.filter(it => it.id !== itemId));
+      deleteCardOnServer(itemId);
+      setShowDetailsModal(false);
+      setSelectedItem(null);
+    }
+  };
+
+  const handleExport = React.useCallback(() => {
+    const dataStr = JSON.stringify(items, null, 2);
+    const dataBlob = new Blob([dataStr], { type: "application/json" });
+    const url = URL.createObjectURL(dataBlob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `cure8-bookmarks-${new Date().toISOString().split("T")[0]}.json`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  }, [items]);
+
+  const handleImport = React.useCallback(() => {
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = ".json";
+    input.onchange = (e: any) => {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = (evt: any) => {
+        try {
+          const importedItems = JSON.parse(evt.target.result);
+          if (Array.isArray(importedItems)) {
+            const baseTime = Date.now();
+            const normalized = importedItems.map((item, index) =>
+              normalizeLegacyItem(item, baseTime - index)
+            );
+            setItems(prev => [...normalized, ...prev]);
+            Promise.all(
+              normalized.map(entry =>
+                createCardOnServer({
+                  id: entry.id,
+                  ...toServerPayload(entry),
+                  createdAt: new Date(entry.createdAt).toISOString(),
+                })
+              )
+            ).catch(error => {
+              console.error("Failed to import bookmarks to API", error);
+            });
+            alert(`Successfully imported ${importedItems.length} bookmarks!`);
+          } else {
+            alert("Invalid file format. Please select a valid Cure8 export file.");
+          }
+        } catch {
+          alert("Error reading file. Please make sure it's a valid JSON file.");
+        }
+      };
+      reader.readAsText(file);
+    };
+    input.click();
+  }, [createCardOnServer]);
+
+  const handleClearData = () => {
+    if (window.confirm("Clear all saved bookmarks? This cannot be undone.")) {
+      setItems([]);
+      clearCardsOnServer();
+      setShowDetailsModal(false);
+      setSelectedItem(null);
+    }
+  };
+
+  const focusOmnibox = React.useCallback(() => {
+    if (typeof document === "undefined") return;
+    const input = document.querySelector('input[placeholder="Paste a URL to add, or type to search…"]');
+    if (input) {
+      input.focus();
+      input.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+  }, []);
+
+  const sortedByRecency = React.useMemo(() => {
+    return [...items].sort((a, b) => {
+      const aTime = typeof a.createdAt === "number" ? a.createdAt : 0;
+      const bTime = typeof b.createdAt === "number" ? b.createdAt : 0;
+      return bTime - aTime;
+    });
+  }, [items]);
+
+  const categoryId = CATEGORY_IDS.has(activeView) ? activeView : "All";
+
+  const filtered = React.useMemo(() => {
+    const search = q.toLowerCase();
+    const matchesSearch = (item) => {
+      const title = (item.title || "").toLowerCase();
+      const domain = (item.domain || "").toLowerCase();
+      return !search || title.includes(search) || domain.includes(search);
+    };
+
+    if (categoryId === "Recent") {
+      return sortedByRecency
+        .filter(matchesSearch)
+        .filter(it => typeof it.createdAt === "number")
+        .slice(0, 50);
+    }
+
+    const baseMatches = sortedByRecency.filter(matchesSearch);
+    if (categoryId === "All" || categoryId === "Home" || !categoryId) {
+      return baseMatches;
+    }
+
+    const targetCategory = categoryId.toLowerCase();
+    return baseMatches.filter(it => (it.category || "").toLowerCase() === targetCategory);
+  }, [sortedByRecency, q, categoryId]);
+
+  let content;
+  if (activeView === "settings") {
+    content = (
+      <SettingsScreen
+        settings={settings}
+        defaultSettings={defaultSettings}
+        onUpdateSettings={updateSettings}
+        onResetSettings={resetSettings}
+        onExport={handleExport}
+        onImport={handleImport}
+        onClearData={handleClearData}
+        itemCount={items.length}
+      />
+    );
+  } else if (activeView === "Home") {
+    const pendingCount = items.filter(it => it.state === "pending").length;
+    const errorCount = items.filter(it => it.state === "error").length;
+    const okCount = items.length - pendingCount - errorCount;
+    const recentItems = sortedByRecency.slice(0, 6);
+
+    content = (
+      <HomeScreen
+        totalItems={items.length}
+        readyItems={okCount}
+        pendingItems={pendingCount}
+        errorItems={errorCount}
+        recentItems={recentItems}
+        onQuickAdd={focusOmnibox}
+        onImport={handleImport}
+        onOpenSettings={() => handleViewChange("settings")}
+        onGoToLibrary={() => handleViewChange("All")}
+        onSelectBookmark={handleCardClick}
+        showThumbnails={settings.showThumbnails}
+      />
+    );
+  } else if (activeView === "help") {
+    content = (
+      <div className="bg-surface border border-white/10 rounded-card p-6 text-text-secondary">
+        <h2 className="text-xl font-bold text-text-primary mb-3">Help</h2>
+        <p className="text-sm">
+          We&apos;re working on curated tips and documentation. For now, reach out to support@cure8s.com
+          if you need a hand.
+        </p>
+      </div>
+    );
+  } else {
+    content = (
+      <>
+        <div className="layout-toolbar">
+          <span className="layout-label">Layout</span>
+          <div className="layout-toggle">
+            {LAYOUT_OPTIONS.map(option => (
+              <button
+                key={option.id}
+                type="button"
+                className={[
+                  "layout-toggle-btn",
+                  layoutMode === option.id ? "is-active" : ""
+                ].join(" ")}
+                onClick={() => handleLayoutChange(option.id)}
+              >
+                {option.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {layoutMode === "list" ? (
+          <div className="bookmark-list">
+            {filtered.map(it => (
+              <Card
+                key={it.id}
+                title={it.title}
+                domain={it.domain}
+                image={settings.showThumbnails ? it.image : undefined}
+                state={it.state}
+                onClick={() => handleCardClick(it)}
+                layout={layoutMode}
+                url={it.url}
+              />
+            ))}
+          </div>
+        ) : (
+          <div className={["bookmark-grid", layoutMode === "masonry" ? "masonry" : "", layoutMode === "compact" ? "compact" : ""].filter(Boolean).join(" ")}>
+            {filtered.map(it => (
+              <Card
+                key={it.id}
+                title={it.title}
+                domain={it.domain}
+                image={settings.showThumbnails ? it.image : undefined}
+                state={it.state}
+                onClick={() => handleCardClick(it)}
+                layout={layoutMode}
+                url={it.url}
+              />
+            ))}
+          </div>
+        )}
+
+        {categoryId === "Recent" && filtered.length === 0 && (
+          <div className="mt-6 text-sm text-text-secondary">
+            No recent items yet - save something!
+          </div>
+        )}
+
+        {showDetailsModal && selectedItem && (
+          <BookmarkModal
+            item={selectedItem}
+            onClose={() => setShowDetailsModal(false)}
+            onDelete={() => handleDeleteItem(selectedItem.id)}
+          />
+        )}
+      </>
+    );
+  }
+
+  const { setSidebar } = useSidebarRegistry();
+
+  const sidebarElement = React.useMemo(
+    () => (
+      <Sidebar
+        active={activeView}
+        onChange={handleViewChange}
+      />
+    ),
+    [activeView, handleViewChange]
+  );
+
+  React.useEffect(() => {
+    setSidebar(sidebarElement);
+    return () => setSidebar(null);
+  }, [setSidebar, sidebarElement]);
+
+  return <>{content}</>;
+}

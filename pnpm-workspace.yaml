@@ -1,2 +1,6 @@
+packages:
+  - next
+  - services/*
+
 onlyBuiltDependencies:
   - '@sentry/cli'

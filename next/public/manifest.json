@@ -1,0 +1,29 @@
+{
+  "short_name": "Cure8",
+  "name": "Cure8 - Content Curation Platform",
+  "description": "Organize and manage your bookmarks, media, and digital resources efficiently with Cure8",
+  "icons": [
+    {
+      "src": "favicon.ico",
+      "sizes": "64x64 32x32 24x24 16x16",
+      "type": "image/x-icon"
+    },
+    {
+      "src": "logo192.png",
+      "type": "image/png",
+      "sizes": "192x192"
+    },
+    {
+      "src": "logo512.png",
+      "type": "image/png",
+      "sizes": "512x512"
+    }
+  ],
+  "start_url": ".",
+  "display": "standalone",
+  "theme_color": "#7B7FDE",
+  "background_color": "#1d1c3a",
+  "categories": ["curation", "bookmarks", "productivity", "organization"],
+  "lang": "en",
+  "scope": "https://cure8s.com/"
+}
