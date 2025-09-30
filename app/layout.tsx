@@ -1,14 +1,25 @@
 ﻿import 'server-only';
 import { ReactNode } from 'react';
 import { assertServerEnv } from '../src/lib/env';
+import './globals.css';
 
 assertServerEnv();
+
+export const metadata = {
+  title: 'Cure8 - Curate what matters',
+  description: 'Your personal bookmark manager with AI-powered metadata enrichment',
+};
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en">
-      <body style={{ fontFamily: 'system-ui, sans-serif', margin: 0, background: '#f5f5f5', color: '#111' }}>
-        <div style={{ maxWidth: '960px', margin: '0 auto', padding: '2rem 1rem' }}>{children}</div>
+      <head>
+        <meta charSet="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <link rel="icon" href="/favicon.ico" />
+      </head>
+      <body>
+        {children}
       </body>
     </html>
   );

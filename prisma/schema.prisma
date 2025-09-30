@@ -3,24 +3,35 @@ generator client {
 }
 
 datasource db {
-  provider  = "postgresql"
-  url       = env("DATABASE_URL")  // pooled 6543 for runtime
-  directUrl = env("DIRECT_URL")    // direct 5432 for migrations
+  provider = "sqlite"
+  url      = "file:./dev.db"
 }
 
 model Card {
-  id        String   @id @default(cuid())
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  title     String
-  url       String
-  image     String?
-  notes     String?
-  tags      Tag[]    // implicit many-to-many
+  id          String   @id @default(cuid())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  title       String
+  url         String
+  domain      String?
+  image       String?
+  description String?
+  notes       String?
+  state       String   @default("ok")  // ok, pending, error
+  tags        Tag[]    // implicit many-to-many
 }
 
 model Tag {
   id    String @id @default(cuid())
   name  String @unique
   cards Card[] // implicit many-to-many
+}
+
+model Settings {
+  id                 String  @id @default(cuid())
+  userId             String  @default("default") @unique
+  autoFetchMetadata  Boolean @default(true)
+  showThumbnails     Boolean @default(true)
+  previewServiceUrl  String  @default("http://localhost:8787/preview?url={{url}}")
+  layoutMode         String  @default("grid") // grid, masonry, list, compact
 }
