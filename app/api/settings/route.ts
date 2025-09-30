@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '../../../src/server/db';
+import { prisma } from '../../../lib/db';
 
 const DEFAULT_USER_ID = 'default';
 

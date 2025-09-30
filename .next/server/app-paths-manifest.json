@@ -1,5 +1,7 @@
 {
   "/api/bookmarks/route": "app/api/bookmarks/route.js",
+  "/api/bookmarks/[id]/route": "app/api/bookmarks/[id]/route.js",
   "/api/settings/route": "app/api/settings/route.js",
+  "/_not-found/page": "app/_not-found/page.js",
   "/page": "app/page.js"
 }

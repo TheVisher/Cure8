@@ -1,9 +1,6 @@
 ﻿import 'server-only';
 import { ReactNode } from 'react';
-import { assertServerEnv } from '../src/lib/env';
 import './globals.css';
-
-assertServerEnv();
 
 export const metadata = {
   title: 'Cure8 - Curate what matters',
