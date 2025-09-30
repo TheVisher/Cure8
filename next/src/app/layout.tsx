@@ -36,7 +36,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
-        {/* Firefox polyfills - only loads in Firefox/Zen */}
+        {/* Simplified Firefox polyfills - only loads in Firefox/Zen */}
         <Script
           id="firefox-polyfills"
           strategy="beforeInteractive"
@@ -44,7 +44,9 @@ export default function RootLayout({
             __html: `
               if (navigator.userAgent.toLowerCase().includes('firefox') || 
                   navigator.userAgent.toLowerCase().includes('zen')) {
-                // Firefox-specific webpack fixes
+                console.log('Firefox/Zen detected - applying polyfills');
+                
+                // Core webpack fixes for Firefox
                 if (!window.__webpack_require__) {
                   window.__webpack_require__ = function(id) {
                     console.warn('Firefox polyfill: webpack require fallback for', id);
@@ -66,7 +68,8 @@ export default function RootLayout({
                       const wrappedFactory = function(...args) {
                         return factory.apply(this, args);
                       };
-                      wrappedFactory.call = factory.call || function(thisArg, ...args) {
+                      // Ensure the wrapped factory has the call method
+                      wrappedFactory.call = function(thisArg, ...args) {
                         return factory.apply(thisArg, args);
                       };
                       return originalDefine.call(this, id, deps, wrappedFactory);
@@ -74,6 +77,8 @@ export default function RootLayout({
                     return originalDefine.apply(this, arguments);
                   };
                 }
+                
+                console.log('Firefox polyfills applied');
               }
             `,
           }}

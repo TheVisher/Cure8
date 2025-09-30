@@ -17,8 +17,8 @@ const nextConfig = {
       },
     ],
   },
-  // Firefox compatibility fixes (won't affect Chrome)
-  webpack: (config, { isServer, dev }) => {
+  // Simplified Firefox compatibility fixes
+  webpack: (config, { isServer }) => {
     if (!isServer) {
       // Fix for Firefox webpack module loading issues
       config.resolve.fallback = {
@@ -33,19 +33,13 @@ const nextConfig = {
         process: false,
       };
       
-      // Ensure proper module resolution for Firefox
-      config.resolve.alias = {
-        ...config.resolve.alias,
-      };
-      
-      // Add Firefox-specific optimizations
+      // Better chunk splitting for Firefox
       config.optimization = {
         ...config.optimization,
         splitChunks: {
           ...config.optimization.splitChunks,
           cacheGroups: {
             ...config.optimization.splitChunks?.cacheGroups,
-            // Ensure better chunk splitting for Firefox
             default: {
               minChunks: 1,
               priority: -20,
@@ -60,8 +54,6 @@ const nextConfig = {
   },
   // Experimental features for better browser compatibility
   experimental: {
-    esmExternals: 'loose',
-    // Enable better Firefox support
     optimizePackageImports: ['react', 'react-dom'],
   },
   // Compiler options for better Firefox support
@@ -70,8 +62,6 @@ const nextConfig = {
   },
   // Output configuration for better browser compatibility
   output: 'standalone',
-  // Transpile packages for better Firefox compatibility
-  transpilePackages: [],
 };
 
 export default nextConfig;
