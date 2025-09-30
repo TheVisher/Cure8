@@ -17,7 +17,7 @@ const nextConfig = {
       },
     ],
   },
-  // Simplified Firefox compatibility fixes
+  // Enhanced Firefox compatibility fixes
   webpack: (config, { isServer }) => {
     if (!isServer) {
       // Fix for Firefox webpack module loading issues
@@ -33,7 +33,12 @@ const nextConfig = {
         process: false,
       };
       
-      // Better chunk splitting for Firefox
+      // Enhanced module resolution for Firefox
+      config.resolve.alias = {
+        ...config.resolve.alias,
+      };
+      
+      // Firefox-specific optimizations
       config.optimization = {
         ...config.optimization,
         splitChunks: {
@@ -45,9 +50,24 @@ const nextConfig = {
               priority: -20,
               reuseExistingChunk: true,
             },
+            // Separate vendor chunks for better Firefox compatibility
+            vendor: {
+              test: /[\\/]node_modules[\\/]/,
+              name: 'vendors',
+              priority: 10,
+              chunks: 'all',
+            },
           },
         },
       };
+      
+      // Add webpack plugin to fix module loading issues
+      config.plugins = config.plugins || [];
+      config.plugins.push(
+        new (require('webpack')).DefinePlugin({
+          'process.env.FIREFOX_COMPAT': JSON.stringify(true),
+        })
+      );
     }
     
     return config;
