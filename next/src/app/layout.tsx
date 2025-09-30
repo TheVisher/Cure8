@@ -36,7 +36,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
-        {/* Refined Firefox polyfills - less aggressive, more targeted */}
+        {/* Targeted Firefox polyfills - focused on the specific error */}
         <Script
           id="firefox-polyfills"
           strategy="beforeInteractive"
@@ -45,14 +45,14 @@ export default function RootLayout({
               (function() {
                 if (navigator.userAgent.toLowerCase().includes('firefox') || 
                     navigator.userAgent.toLowerCase().includes('zen')) {
-                  console.log('Firefox/Zen detected - applying refined polyfills');
+                  console.log('Firefox/Zen detected - applying targeted polyfills');
                   
-                  // Store original functions to avoid interference
+                  // Store original functions
                   const originalWebpackRequire = window.__webpack_require__;
                   const originalDefine = window.define;
                   
-                  // Only patch if webpack require doesn't exist or is broken
-                  if (!window.__webpack_require__ || !window.__webpack_require__.t) {
+                  // Ensure webpack require exists and has required properties
+                  if (!window.__webpack_require__) {
                     window.__webpack_require__ = function(id) {
                       try {
                         if (originalWebpackRequire) {
@@ -63,30 +63,59 @@ export default function RootLayout({
                       }
                       return {};
                     };
-                    
-                    // Add minimal required properties
-                    if (window.__webpack_require__) {
-                      window.__webpack_require__.t = function(value, mode) {
-                        return value;
-                      };
-                      window.__webpack_require__.m = window.__webpack_require__.m || {};
-                      window.__webpack_require__.c = window.__webpack_require__.c || {};
-                    }
                   }
                   
-                  // Only patch define if it exists and needs fixing
+                  // Add essential webpack require properties
+                  if (window.__webpack_require__) {
+                    window.__webpack_require__.t = window.__webpack_require__.t || function(value, mode) {
+                      return value;
+                    };
+                    window.__webpack_require__.m = window.__webpack_require__.m || {};
+                    window.__webpack_require__.c = window.__webpack_require__.c || {};
+                    window.__webpack_require__.d = window.__webpack_require__.d || function(exports, name, getter) {
+                      if (!window.__webpack_require__.o(exports, name)) {
+                        Object.defineProperty(exports, name, { enumerable: true, get: getter });
+                      }
+                    };
+                    window.__webpack_require__.o = window.__webpack_require__.o || function(obj, prop) {
+                      return Object.prototype.hasOwnProperty.call(obj, prop);
+                    };
+                  }
+                  
+                  // Fix AMD define function - specifically target the factory issue
                   if (originalDefine) {
                     const originalDefineCall = originalDefine.call;
                     window.define = function(id, deps, factory) {
-                      // Only wrap if factory is a function without call method
-                      if (typeof factory === 'function' && !factory.call) {
-                        const originalFactory = factory;
-                        const wrappedFactory = function(...args) {
-                          return originalFactory.apply(this, args);
+                      // Ensure factory is always a function with call method
+                      if (typeof factory === 'function') {
+                        if (!factory.call) {
+                          const originalFactory = factory;
+                          const wrappedFactory = function(...args) {
+                            return originalFactory.apply(this, args);
+                          };
+                          // Ensure call method exists
+                          wrappedFactory.call = function(thisArg, ...args) {
+                            return originalFactory.apply(thisArg, args);
+                          };
+                          return originalDefineCall.call(this, id, deps, wrappedFactory);
+                        }
+                      } else if (factory && typeof factory === 'object') {
+                        // Handle object factories
+                        const objFactory = factory;
+                        const wrappedFactory = function() {
+                          return objFactory;
                         };
-                        // Minimal property copying to avoid interference
-                        wrappedFactory.call = function(thisArg, ...args) {
-                          return originalFactory.apply(thisArg, args);
+                        wrappedFactory.call = function() {
+                          return objFactory;
+                        };
+                        return originalDefineCall.call(this, id, deps, wrappedFactory);
+                      } else if (factory === undefined || factory === null) {
+                        // Handle undefined/null factories
+                        const wrappedFactory = function() {
+                          return {};
+                        };
+                        wrappedFactory.call = function() {
+                          return {};
                         };
                         return originalDefineCall.call(this, id, deps, wrappedFactory);
                       }
@@ -94,7 +123,32 @@ export default function RootLayout({
                     };
                   }
                   
-                  console.log('Refined Firefox polyfills applied');
+                  // Intercept webpack module loading to fix options.factory issues
+                  if (window.__webpack_require__ && window.__webpack_require__.m) {
+                    const originalModule = window.__webpack_require__.m;
+                    const moduleProxy = new Proxy(originalModule, {
+                      get(target, prop) {
+                        const module = target[prop];
+                        if (module && typeof module === 'function') {
+                          // Wrap module functions to ensure they have call method
+                          if (!module.call) {
+                            const originalModule = module;
+                            const wrappedModule = function(...args) {
+                              return originalModule.apply(this, args);
+                            };
+                            wrappedModule.call = function(thisArg, ...args) {
+                              return originalModule.apply(thisArg, args);
+                            };
+                            return wrappedModule;
+                          }
+                        }
+                        return module;
+                      }
+                    });
+                    window.__webpack_require__.m = moduleProxy;
+                  }
+                  
+                  console.log('Targeted Firefox polyfills applied');
                 }
               })();
             `,
