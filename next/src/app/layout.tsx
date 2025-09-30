@@ -36,7 +36,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
-        {/* Aggressive Firefox polyfills - loads immediately */}
+        {/* Refined Firefox polyfills - less aggressive, more targeted */}
         <Script
           id="firefox-polyfills"
           strategy="beforeInteractive"
@@ -45,112 +45,56 @@ export default function RootLayout({
               (function() {
                 if (navigator.userAgent.toLowerCase().includes('firefox') || 
                     navigator.userAgent.toLowerCase().includes('zen')) {
-                  console.log('Firefox/Zen detected - applying aggressive polyfills');
+                  console.log('Firefox/Zen detected - applying refined polyfills');
                   
-                  // Override webpack module loading completely for Firefox
+                  // Store original functions to avoid interference
                   const originalWebpackRequire = window.__webpack_require__;
+                  const originalDefine = window.define;
                   
-                  // Create a robust webpack require function
-                  window.__webpack_require__ = function(id) {
-                    try {
-                      if (originalWebpackRequire) {
-                        return originalWebpackRequire.call(this, id);
+                  // Only patch if webpack require doesn't exist or is broken
+                  if (!window.__webpack_require__ || !window.__webpack_require__.t) {
+                    window.__webpack_require__ = function(id) {
+                      try {
+                        if (originalWebpackRequire) {
+                          return originalWebpackRequire.call(this, id);
+                        }
+                      } catch (e) {
+                        console.warn('Firefox polyfill: webpack require fallback for', id);
                       }
-                    } catch (e) {
-                      console.warn('Firefox polyfill: webpack require fallback for', id, e);
-                    }
-                    return {};
-                  };
-                  
-                  // Ensure webpack require has all necessary properties
-                  if (window.__webpack_require__) {
-                    window.__webpack_require__.t = function(value, mode) {
-                      return value;
+                      return {};
                     };
                     
-                    window.__webpack_require__.m = window.__webpack_require__.m || {};
-                    window.__webpack_require__.c = window.__webpack_require__.c || {};
-                    window.__webpack_require__.d = window.__webpack_require__.d || function(exports, name, getter) {
-                      if (!window.__webpack_require__.o(exports, name)) {
-                        Object.defineProperty(exports, name, { enumerable: true, get: getter });
-                      }
-                    };
-                    window.__webpack_require__.o = window.__webpack_require__.o || function(obj, prop) {
-                      return Object.prototype.hasOwnProperty.call(obj, prop);
-                    };
+                    // Add minimal required properties
+                    if (window.__webpack_require__) {
+                      window.__webpack_require__.t = function(value, mode) {
+                        return value;
+                      };
+                      window.__webpack_require__.m = window.__webpack_require__.m || {};
+                      window.__webpack_require__.c = window.__webpack_require__.c || {};
+                    }
                   }
                   
-                  // Fix AMD define function
-                  const originalDefine = window.define;
+                  // Only patch define if it exists and needs fixing
                   if (originalDefine) {
+                    const originalDefineCall = originalDefine.call;
                     window.define = function(id, deps, factory) {
-                      // Ensure factory is always a function with call method
-                      if (typeof factory === 'function') {
-                        if (!factory.call) {
-                          const originalFactory = factory;
-                          factory = function(...args) {
-                            return originalFactory.apply(this, args);
-                          };
-                          // Copy all properties
-                          Object.setPrototypeOf(factory, originalFactory);
-                          Object.assign(factory, originalFactory);
-                          // Ensure call method exists
-                          factory.call = function(thisArg, ...args) {
-                            return originalFactory.apply(thisArg, args);
-                          };
-                        }
-                      } else if (factory && typeof factory === 'object') {
-                        // Handle object factories
-                        const objFactory = factory;
-                        factory = function() {
-                          return objFactory;
+                      // Only wrap if factory is a function without call method
+                      if (typeof factory === 'function' && !factory.call) {
+                        const originalFactory = factory;
+                        const wrappedFactory = function(...args) {
+                          return originalFactory.apply(this, args);
                         };
-                        factory.call = function() {
-                          return objFactory;
+                        // Minimal property copying to avoid interference
+                        wrappedFactory.call = function(thisArg, ...args) {
+                          return originalFactory.apply(thisArg, args);
                         };
-                      } else {
-                        // Handle other cases
-                        const value = factory;
-                        factory = function() {
-                          return value;
-                        };
-                        factory.call = function() {
-                          return value;
-                        };
+                        return originalDefineCall.call(this, id, deps, wrappedFactory);
                       }
-                      
-                      return originalDefine.call(this, id, deps, factory);
+                      return originalDefineCall.call(this, id, deps, factory);
                     };
                   }
                   
-                  // Override webpack module options to prevent undefined factory errors
-                  const originalModule = window.__webpack_require__ && window.__webpack_require__.m;
-                  if (originalModule) {
-                    const moduleProxy = new Proxy(originalModule, {
-                      get(target, prop) {
-                        const module = target[prop];
-                        if (module && typeof module === 'function') {
-                          // Ensure module function has call method
-                          if (!module.call) {
-                            const originalModule = module;
-                            const wrappedModule = function(...args) {
-                              return originalModule.apply(this, args);
-                            };
-                            Object.setPrototypeOf(wrappedModule, originalModule);
-                            Object.assign(wrappedModule, originalModule);
-                            wrappedModule.call = function(thisArg, ...args) {
-                              return originalModule.apply(thisArg, args);
-                            };
-                            return wrappedModule;
-                          }
-                        }
-                        return module;
-                      }
-                    });
-                    window.__webpack_require__.m = moduleProxy;
-                  }
-                  
-                  console.log('Aggressive Firefox polyfills applied');
+                  console.log('Refined Firefox polyfills applied');
                 }
               })();
             `,
